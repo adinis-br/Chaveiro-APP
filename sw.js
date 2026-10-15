@@ -1,4 +1,4 @@
-const CACHE_NAME = 'keyforge-3d-v4';
+const CACHE_NAME = 'keyforge-3d-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,11 +9,13 @@ const ASSETS_TO_CACHE = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js',
   'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/TTFLoader.js',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/SVGLoader.js',
   'https://unpkg.com/clipper-lib@1.0.0/clipper.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/optimer_bold.typeface.json',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/gentilis_bold.typeface.json',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/droid/droid_sans_bold.typeface.json'
+  'https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js',
+  'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.0.8/files/montserrat-latin-black-normal.woff',
+  'https://cdn.jsdelivr.net/npm/@fontsource/pacifico@5.0.8/files/pacifico-latin-regular-normal.woff',
+  'https://cdn.jsdelivr.net/npm/@fontsource/bungee@5.0.8/files/bungee-latin-regular-normal.woff',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json'
 ];
 
 self.addEventListener('install', (event) => {
