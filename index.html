@@ -524,31 +524,52 @@
                 if(baseMesh) { scene.remove(baseMesh); if(baseMesh.geometry) baseMesh.geometry.dispose(); }
                 if(textMesh) { scene.remove(textMesh); if(textMesh.geometry) textMesh.geometry.dispose(); }
                 
+                // --- CÁLCULO DE ESCALA PARA CORREÇÃO DA IMAGEM GIGANTE ---
+                let minX_raw = Infinity, maxX_raw = -Infinity;
+                shapesToProcess.forEach(shape => {
+                    const pts = shape.extractPoints(8);
+                    pts.shape.forEach(p => {
+                        minX_raw = Math.min(minX_raw, p.x);
+                        maxX_raw = Math.max(maxX_raw, p.x);
+                    });
+                });
+
+                let originalWidth = maxX_raw - minX_raw;
+                if (originalWidth <= 0 || originalWidth === Infinity) originalWidth = 1;
+
+                const targetLength = parseFloat(lengthSlider.value) || 60;
+                // mmToRaw converte milímetros no tamanho original (texto ou pixels)
+                const mmToRaw = originalWidth / targetLength; 
+
                 const clipperScale = 1000;
                 const rawPaths = [];
                 
-                // Extrai as linhas primárias dos desenhos
+                // Extração garantindo a orientação correta dos polígonos
                 shapesToProcess.forEach(shape => {
                     const points = shape.extractPoints(8);
                     if (points.shape && points.shape.length > 2) {
-                        rawPaths.push(points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
+                        let path = points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) }));
+                        if (!ClipperLib.Clipper.Orientation(path)) path.reverse();
+                        rawPaths.push(path);
                     }
                 });
 
-                // NOVIDADE: Filtro de Correção de Polígonos Invertidos (Resolve o erro da Imagem sumir)
+                // União de contornos para garantir massa sólida única
                 const clPrep = new ClipperLib.Clipper();
                 clPrep.AddPaths(rawPaths, ClipperLib.PolyType.ptSubject, true);
                 const mergedPaths = new ClipperLib.Paths();
-                // A união reorienta a imagem para que a ClipperLib sempre a veja como "Massa Sólida" e não como "Buraco"
                 clPrep.Execute(ClipperLib.ClipType.ctUnion, mergedPaths, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
 
                 const pathsToOffset = mergedPaths.length > 0 ? mergedPaths : rawPaths;
                 
-                const currentThickness = parseFloat(thicknessSlider.value) || 1.5;
+                // Aplicação das dimensões com precisão convertida
+                const currentThicknessMm = parseFloat(thicknessSlider.value) || 1.5;
+                const offsetDistRaw = currentThicknessMm * mmToRaw * clipperScale;
+
                 const co = new ClipperLib.ClipperOffset();
                 co.AddPaths(pathsToOffset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
                 const offsetPaths = new ClipperLib.Paths();
-                co.Execute(offsetPaths, currentThickness * clipperScale);
+                co.Execute(offsetPaths, offsetDistRaw);
                 
                 if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
                 
@@ -558,18 +579,24 @@
                     minY = Math.min(minY, p.Y); maxY = Math.max(maxY, p.Y); 
                 }));
                 
-                const ringRadius = 4.8 * clipperScale;
-                const holeRadius = 2.6 * clipperScale;
-                const cx = minX - holeRadius - 2 * clipperScale;
+                // Tamanhos corretos e dinâmicos para a argola
+                const ringRadiusRaw = 4.8 * mmToRaw * clipperScale;
+                const holeRadiusRaw = 2.6 * mmToRaw * clipperScale;
+                const paddingRaw = 2.0 * mmToRaw * clipperScale;
+                
+                const cx = minX - holeRadiusRaw - paddingRaw;
                 const cy = (minY + maxY) / 2;
                 
                 const ringOuter = [], ringInner = [];
                 const segments = 40;
                 for(let i = 0; i <= segments; i++) {
                     const a = (i / segments) * Math.PI * 2;
-                    ringOuter.push({ X: Math.round(cx + Math.cos(a) * ringRadius), Y: Math.round(cy + Math.sin(a) * ringRadius) });
-                    ringInner.push({ X: Math.round(cx + Math.cos(a) * holeRadius), Y: Math.round(cy + Math.sin(a) * holeRadius) });
+                    ringOuter.push({ X: Math.round(cx + Math.cos(a) * ringRadiusRaw), Y: Math.round(cy + Math.sin(a) * ringRadiusRaw) });
+                    ringInner.push({ X: Math.round(cx + Math.cos(a) * holeRadiusRaw), Y: Math.round(cy + Math.sin(a) * holeRadiusRaw) });
                 }
+
+                if (!ClipperLib.Clipper.Orientation(ringOuter)) ringOuter.reverse();
+                if (!ClipperLib.Clipper.Orientation(ringInner)) ringInner.reverse();
                 
                 const cl1 = new ClipperLib.Clipper();
                 const unionPaths = new ClipperLib.Paths();
@@ -609,15 +636,30 @@
                 }
                 
                 const currentBaseThickness = parseFloat(baseThicknessSlider.value) || 3.0;
-                const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, { depth: Math.max(0.2, currentBaseThickness - 0.7), bevelEnabled: true, bevelThickness: 0.7, bevelSize: 0.55, bevelSegments: 4, curveSegments: 8 });
-                const textGeo = new THREE.ExtrudeGeometry(shapesToProcess, { depth: parseFloat(textThicknessSlider.value) || 1.5, bevelEnabled: false, curveSegments: 8 });
+                const currentTextThickness = parseFloat(textThicknessSlider.value) || 1.5;
+
+                const baseDepthRaw = Math.max(0.2, currentBaseThickness - 0.7) * mmToRaw;
+                const textDepthRaw = currentTextThickness * mmToRaw;
+
+                const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, { 
+                    depth: baseDepthRaw, 
+                    bevelEnabled: true, 
+                    bevelThickness: 0.7 * mmToRaw, 
+                    bevelSize: 0.55 * mmToRaw, 
+                    bevelSegments: 4, 
+                    curveSegments: 8 
+                });
+                const textGeo = new THREE.ExtrudeGeometry(shapesToProcess, { 
+                    depth: textDepthRaw, 
+                    bevelEnabled: false, 
+                    curveSegments: 8 
+                });
                 
-                baseGeo.computeBoundingBox();
-                const originalWidth = baseGeo.boundingBox.max.x - baseGeo.boundingBox.min.x;
-                const scaleFactor = (parseFloat(lengthSlider.value) || 60) / originalWidth;
+                // Aplica a escala exata em XYZ para renderizar tudo corretamente em milímetros finais
+                const scaleFactor = targetLength / originalWidth;
+                baseGeo.scale(scaleFactor, scaleFactor, scaleFactor);
+                textGeo.scale(scaleFactor, scaleFactor, scaleFactor);
                 
-                baseGeo.scale(scaleFactor, scaleFactor, 1);
-                textGeo.scale(scaleFactor, scaleFactor, 1);
                 textGeo.translate(0, 0, currentBaseThickness);
                 
                 baseGeo.computeBoundingBox();
