@@ -1,4 +1,4 @@
-const CACHE_NAME = 'keyforge-3d-v5';
+const CACHE_NAME = 'keyforge-3d-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -12,9 +12,9 @@ const ASSETS_TO_CACHE = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/SVGLoader.js',
   'https://unpkg.com/clipper-lib@1.0.0/clipper.js',
   'https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js',
-  'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.0.8/files/montserrat-latin-black-normal.woff',
-  'https://cdn.jsdelivr.net/npm/@fontsource/pacifico@5.0.8/files/pacifico-latin-regular-normal.woff',
-  'https://cdn.jsdelivr.net/npm/@fontsource/bungee@5.0.8/files/bungee-latin-regular-normal.woff',
+  'https://fonts.gstatic.com/s/montserrat/v25/JTUHjIg1_i6t8kCHKm4532VJOt5-QNF3Lw.ttf',
+  'https://fonts.gstatic.com/s/pacifico/v22/FwZY7-Qmy14u9lezJ-6H6MmBp0u-.ttf',
+  'https://fonts.gstatic.com/s/bungee/v11/N0bU2OzVNEAroqTr5DxA_80.ttf',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json'
 ];
 
