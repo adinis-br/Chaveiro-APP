@@ -266,7 +266,6 @@
         let scene, camera, renderer, controls, baseMesh, textMesh;
         let loadedFont = null, globalShapes = [], debounceTimer, rasterDebounce, uploadedImageObj = null;
 
-        // Servidor JSDelivr que não sofre bloqueio de segurança
         const fontCache = {}; 
         const FONT_URLS = {
             montserrat: { type: 'ttf', url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/montserrat/static/Montserrat-Black.ttf' },
@@ -526,18 +525,28 @@
                 if(textMesh) { scene.remove(textMesh); if(textMesh.geometry) textMesh.geometry.dispose(); }
                 
                 const clipperScale = 1000;
-                const outerPaths = [];
+                const rawPaths = [];
                 
+                // Extrai as linhas primárias dos desenhos
                 shapesToProcess.forEach(shape => {
                     const points = shape.extractPoints(8);
                     if (points.shape && points.shape.length > 2) {
-                        outerPaths.push(points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
+                        rawPaths.push(points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
                     }
                 });
+
+                // NOVIDADE: Filtro de Correção de Polígonos Invertidos (Resolve o erro da Imagem sumir)
+                const clPrep = new ClipperLib.Clipper();
+                clPrep.AddPaths(rawPaths, ClipperLib.PolyType.ptSubject, true);
+                const mergedPaths = new ClipperLib.Paths();
+                // A união reorienta a imagem para que a ClipperLib sempre a veja como "Massa Sólida" e não como "Buraco"
+                clPrep.Execute(ClipperLib.ClipType.ctUnion, mergedPaths, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+
+                const pathsToOffset = mergedPaths.length > 0 ? mergedPaths : rawPaths;
                 
                 const currentThickness = parseFloat(thicknessSlider.value) || 1.5;
                 const co = new ClipperLib.ClipperOffset();
-                co.AddPaths(outerPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+                co.AddPaths(pathsToOffset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
                 const offsetPaths = new ClipperLib.Paths();
                 co.Execute(offsetPaths, currentThickness * clipperScale);
                 
@@ -729,7 +738,6 @@
         initThree();
         
         try {
-            // CORREÇÃO: Busca diretamente a variável "minhaFonteCustomizada" (resolve o problema da tela em branco)
             let fontData = (typeof minhaFonteCustomizada !== 'undefined') ? minhaFonteCustomizada : null;
             if(!fontData) throw new Error("Arquivo da fonte não localizado.");
             
