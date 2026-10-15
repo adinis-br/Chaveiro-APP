@@ -1,4 +1,4 @@
-const CACHE_NAME = 'keyforge-3d-v8';
+const CACHE_NAME = 'keyforge-3d-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
