@@ -358,11 +358,11 @@
                 </label>
                 <select id="fontSelect">
                     <option value="chewy">Chewy (Divertida)</option>
-                     
-                    <option value="pacifico">Pacifico (Cursiva)</option>
-                    <option value="bungee">Bungee (Gamer/Forte)</option>
-                    <option value="helvetiker">Helvetiker (Clássica)</option>
-                    <option value="custom_file">📂 Arquivo .TTF/.OTF...</option>
+                    <option value="helvetiker">Helvetiker (Moderna)</option>
+                    <option value="optimer">Optimer (Elegante)</option>
+                    <option value="gentilis">Gentilis (Clássica)</option>
+                    <option value="droid">Droid Sans (Forte)</option>
+                    <option value="custom_file">📂 Arquivo .TTF...</option>
                 </select>
                 <input type="file" id="customFontInput" accept=".ttf,.otf" class="hidden">
             </div>
@@ -431,13 +431,14 @@
 
     (function(){
         let scene, camera, renderer, controls, baseMesh, textMesh, loadedFont = null, debounceTimer;
-        const fontCache = {}; // Guarda as fontes carregadas na memória para troca instantânea
+        const fontCache = {}; 
         
+        // Substituído para Fontes Nativas do Three.js (.json) à prova de erros de rede (CORS)
         const FONT_URLS = {
-             
-            pacifico:   { type: 'ttf', url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/pacifico/Pacifico-Regular.ttf' },
-            bungee:     { type: 'ttf', url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/bungee/Bungee-Regular.ttf' },
-            helvetiker: { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json' }
+            helvetiker: { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json' },
+            optimer:    { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/optimer_bold.typeface.json' },
+            gentilis:   { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/gentilis_bold.typeface.json' },
+            droid:      { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/droid/droid_sans_bold.typeface.json' }
         };
 
         const nameInput = document.getElementById('nameInput');
@@ -560,25 +561,6 @@
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
-        }
-
-        // Função Auxiliar: Converte qualquer forma (mesmo cursiva sobreposta) em contornos limpos no Clipper
-        function extractCleanTextPaths(textShapes, clipperScale) {
-            const subjPaths = [];
-            textShapes.forEach(shape => {
-                const pts = shape.extractPoints(8);
-                if (pts.shape && pts.shape.length > 2) {
-                    subjPaths.push(pts.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
-                }
-                if (pts.holes) {
-                    pts.holes.forEach(h => {
-                        if (h.length > 2) {
-                            subjPaths.push(h.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
-                        }
-                    });
-                }
-            });
-            return subjPaths;
         }
         
         async function generateKeychain() {
@@ -842,7 +824,7 @@
             debounceTimer = setTimeout(() => generateKeychain(), 250);
         }
         
-        // Gerenciador de troca de fontes (Locais, Remotas e Upload .TTF)
+        // Gerenciador de troca de fontes 
         function switchFont(fontKey) {
             if (fontKey === 'custom_file') {
                 customFontInput.click();
@@ -871,7 +853,7 @@
                     generateKeychain();
                 }, undefined, () => {
                     fontSelect.value = lastSelectedFont;
-                    showError("Erro ao baixar a fonte selecionada.");
+                    showError("Erro de rede. Tente outra fonte.");
                 });
             } else if (fontConfig.type === 'ttf') {
                 const ttfLoader = new THREE.TTFLoader();
@@ -908,7 +890,6 @@
                     const customKey = 'user_' + file.name;
                     fontCache[customKey] = font;
                     
-                    // Adiciona o nome da fonte no menu seletor
                     let opt = document.createElement('option');
                     opt.value = customKey;
                     opt.innerText = "⭐ " + file.name.replace(/\.(ttf|otf)$/i, '');
