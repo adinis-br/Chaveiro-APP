@@ -266,12 +266,12 @@
         let scene, camera, renderer, controls, baseMesh, textMesh;
         let loadedFont = null, globalShapes = [], debounceTimer, rasterDebounce, uploadedImageObj = null;
 
-        // Links diretos da CDN oficial do Google Fonts (livres de bloqueio CORS)
+        // Servidor JSDelivr que não sofre bloqueio de segurança
         const fontCache = {}; 
         const FONT_URLS = {
-            montserrat: { type: 'ttf', url: 'https://fonts.gstatic.com/s/montserrat/v25/JTUHjIg1_i6t8kCHKm4532VJOt5-QNF3Lw.ttf' },
-            pacifico:   { type: 'ttf', url: 'https://fonts.gstatic.com/s/pacifico/v22/FwZY7-Qmy14u9lezJ-6H6MmBp0u-.ttf' },
-            bungee:     { type: 'ttf', url: 'https://fonts.gstatic.com/s/bungee/v11/N0bU2OzVNEAroqTr5DxA_80.ttf' },
+            montserrat: { type: 'ttf', url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/montserrat/static/Montserrat-Black.ttf' },
+            pacifico:   { type: 'ttf', url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/pacifico/Pacifico-Regular.ttf' },
+            bungee:     { type: 'ttf', url: 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/bungee/Bungee-Regular.ttf' },
             helvetiker: { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json' }
         };
 
@@ -472,14 +472,12 @@
                 const svgData = loader.parse(svgStr);
                 let tempShapes = [];
                 svgData.paths.forEach(path => {
-                    // Ignora fundos claros/brancos gerados pelo tracer
                     if (path.color.r > 0.8 && path.color.g > 0.8 && path.color.b > 0.8) return;
                     tempShapes.push(...path.toShapes(true));
                 });
                 
                 if(tempShapes.length === 0) throw new Error("Aumente a Sensibilidade para detectar a imagem.");
                 
-                // Inverte o eixo Y para corrigir o espelhamento do SVGLoader
                 globalShapes = [];
                 tempShapes.forEach(shape => {
                     const newShape = new THREE.Shape();
@@ -530,7 +528,6 @@
                 const clipperScale = 1000;
                 const outerPaths = [];
                 
-                // Extrai o contorno principal de todos os elementos (Texto ou Imagem) para a base
                 shapesToProcess.forEach(shape => {
                     const points = shape.extractPoints(8);
                     if (points.shape && points.shape.length > 2) {
@@ -552,7 +549,6 @@
                     minY = Math.min(minY, p.Y); maxY = Math.max(maxY, p.Y); 
                 }));
                 
-                // Calcula a posição da argola à esquerda
                 const ringRadius = 4.8 * clipperScale;
                 const holeRadius = 2.6 * clipperScale;
                 const cx = minX - holeRadius - 2 * clipperScale;
@@ -668,7 +664,6 @@
             debounceTimer = setTimeout(() => generateKeychain(), 250);
         }
 
-        // --- SISTEMA DE FONTES À PROVA DE FALHAS ---
         function switchFont(fontKey) {
             if (fontKey === 'custom_file') { customFontInput.click(); return; }
             if (fontCache[fontKey]) { loadedFont = fontCache[fontKey]; lastSelectedFont = fontKey; triggerGeneration(); return; }
@@ -734,12 +729,15 @@
         initThree();
         
         try {
-            let fontData = window.minhaFonteCustomizada;
+            // CORREÇÃO: Busca diretamente a variável "minhaFonteCustomizada" (resolve o problema da tela em branco)
+            let fontData = (typeof minhaFonteCustomizada !== 'undefined') ? minhaFonteCustomizada : null;
+            if(!fontData) throw new Error("Arquivo da fonte não localizado.");
+            
             loadedFont = new THREE.FontLoader().parse(fontData);
             fontCache['chewy'] = loadedFont;
             triggerGeneration();
         } catch(error) {
-            showError("Erro ao iniciar fonte principal.");
+            showError("Erro ao iniciar fonte principal Chewy.");
         }
         
         function animate() {
