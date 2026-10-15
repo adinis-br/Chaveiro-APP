@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -134,7 +133,6 @@
         }
     </style>
 
-    <!-- Bibliotecas Three.js, Fontes, SVG Loader e ImageTracer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
@@ -167,7 +165,6 @@
     
     <div class="controls-panel">
         
-        <!-- SELETOR DE MODO -->
         <div class="form-group" style="background: rgba(5, 150, 105, 0.1); padding: 10px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(5, 150, 105, 0.3);">
             <label style="color: var(--primary-light); margin-bottom: 8px;">🛠️ Modo de Criação</label>
             <select id="modeSelect">
@@ -176,7 +173,6 @@
             </select>
         </div>
 
-        <!-- CONTROLES MODO TEXTO -->
         <div id="textGroup" class="form-row">
             <div class="form-group" style="flex: 1.3;">
                 <label><span>📝 Nome</span><span class="value-display">máx 20</span></label>
@@ -188,23 +184,20 @@
                     <option value="chewy">Chewy (Divertida)</option>
                     <option value="montserrat">Montserrat (Moderna)</option>
                     <option value="pacifico">Pacifico (Cursiva)</option>
-                    <option value="bungee">Bungee (Forte)</option>
+                    <option value="bungee">Bungee (Gamer/Forte)</option>
                     <option value="helvetiker">Helvetiker (Clássica)</option>
-                    <option value="custom_file">📂 TTF / OTF...</option>
+                    <option value="custom_file">📂 Arquivo .TTF/.OTF...</option>
                 </select>
                 <input type="file" id="customFontInput" accept=".ttf,.otf" class="hidden">
             </div>
         </div>
 
-        <!-- CONTROLES MODO IMAGEM -->
         <div id="imageGroup" class="hidden">
-            <div class="form-row">
-                <div class="form-group" style="flex: 1;">
-                    <label><span>📂 Arquivo (JPG, PNG, SVG)</span></label>
-                    <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.svg" class="hidden">
-                    <div id="uploadImageBtn" class="btn-secondary">
-                        <span id="imageBtnText">Toque para selecionar imagem</span>
-                    </div>
+            <div class="form-group">
+                <label><span>📂 Arquivo (JPG, PNG, SVG)</span></label>
+                <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.svg" class="hidden">
+                <div id="uploadImageBtn" class="btn-secondary">
+                    <span id="imageBtnText">Toque para selecionar imagem</span>
                 </div>
             </div>
             <div class="form-group">
@@ -213,7 +206,6 @@
             </div>
         </div>
         
-        <!-- PARÂMETROS GERAIS (Tamanho e Espessura) -->
         <div class="form-row">
             <div class="form-group">
                 <label>📏 Comprimento <span id="lengthValue" class="value-display">60mm</span></label>
@@ -273,17 +265,21 @@
     (function(){
         let scene, camera, renderer, controls, baseMesh, textMesh;
         let loadedFont = null, globalShapes = [], debounceTimer, rasterDebounce, uploadedImageObj = null;
-        
+
+        // Links diretos da CDN oficial do Google Fonts (livres de bloqueio CORS)
         const fontCache = {}; 
         const FONT_URLS = {
-            montserrat: { type: 'ttf', url: 'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.0.8/files/montserrat-latin-black-normal.woff' },
-            pacifico:   { type: 'ttf', url: 'https://cdn.jsdelivr.net/npm/@fontsource/pacifico@5.0.8/files/pacifico-latin-regular-normal.woff' },
-            bungee:     { type: 'ttf', url: 'https://cdn.jsdelivr.net/npm/@fontsource/bungee@5.0.8/files/bungee-latin-regular-normal.woff' },
+            montserrat: { type: 'ttf', url: 'https://fonts.gstatic.com/s/montserrat/v25/JTUHjIg1_i6t8kCHKm4532VJOt5-QNF3Lw.ttf' },
+            pacifico:   { type: 'ttf', url: 'https://fonts.gstatic.com/s/pacifico/v22/FwZY7-Qmy14u9lezJ-6H6MmBp0u-.ttf' },
+            bungee:     { type: 'ttf', url: 'https://fonts.gstatic.com/s/bungee/v11/N0bU2OzVNEAroqTr5DxA_80.ttf' },
             helvetiker: { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json' }
         };
 
         const modeSelect = document.getElementById('modeSelect');
         const textGroup = document.getElementById('textGroup');
+        const fontSelect = document.getElementById('fontSelect');
+        const customFontInput = document.getElementById('customFontInput');
+        
         const imageGroup = document.getElementById('imageGroup');
         const imageInput = document.getElementById('imageInput');
         const uploadImageBtn = document.getElementById('uploadImageBtn');
@@ -292,8 +288,6 @@
         const thresholdValue = document.getElementById('thresholdValue');
 
         const nameInput = document.getElementById('nameInput');
-        const fontSelect = document.getElementById('fontSelect');
-        const customFontInput = document.getElementById('customFontInput');
         const lengthSlider = document.getElementById('lengthSlider');
         const lengthValue = document.getElementById('lengthValue');
         const thicknessSlider = document.getElementById('thicknessSlider');
@@ -321,7 +315,7 @@
             } else {
                 loadingDiv.classList.add('hidden');
                 isGenerating = false;
-                if(globalShapes.length > 0) downloadBtn.disabled = false;
+                downloadBtn.disabled = false;
             }
         }
         
@@ -333,7 +327,6 @@
             downloadBtn.disabled = true;
             setTimeout(() => {
                 if(!errorBox.classList.contains('hidden')) errorBox.classList.add('hidden');
-                if(globalShapes.length > 0) downloadBtn.disabled = false;
             }, 4000);
         }
         
@@ -405,7 +398,7 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 if (file.type.includes('svg')) {
-                    uploadedImageObj = null; // SVG doesn't need threshold re-render
+                    uploadedImageObj = null;
                     processSVG(event.target.result);
                 } else {
                     const img = new Image();
@@ -435,7 +428,7 @@
             try {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const maxSize = 400; // Otimização para celulares
+                const maxSize = 400; 
                 let w = img.width, h = img.height;
                 if (w > maxSize || h > maxSize) {
                     const ratio = Math.min(maxSize/w, maxSize/h);
@@ -479,8 +472,8 @@
                 const svgData = loader.parse(svgStr);
                 let tempShapes = [];
                 svgData.paths.forEach(path => {
-                    // Ignora fundos brancos gerados
-                    if (path.color.r > 0.9 && path.color.g > 0.9 && path.color.b > 0.9) return;
+                    // Ignora fundos claros/brancos gerados pelo tracer
+                    if (path.color.r > 0.8 && path.color.g > 0.8 && path.color.b > 0.8) return;
                     tempShapes.push(...path.toShapes(true));
                 });
                 
@@ -489,21 +482,21 @@
                 // Inverte o eixo Y para corrigir o espelhamento do SVGLoader
                 globalShapes = [];
                 tempShapes.forEach(shape => {
-                    const pts = shape.extractPoints(12);
                     const newShape = new THREE.Shape();
-                    if(pts.shape.length > 0) {
+                    const pts = shape.extractPoints(12);
+                    if(pts.shape.length > 2) {
                         newShape.moveTo(pts.shape[0].x, -pts.shape[0].y);
                         for(let i=1; i<pts.shape.length; i++) newShape.lineTo(pts.shape[i].x, -pts.shape[i].y);
+                        pts.holes.forEach(hole => {
+                            if(hole.length > 2) {
+                                const newHole = new THREE.Path();
+                                newHole.moveTo(hole[0].x, -hole[0].y);
+                                for(let i=1; i<hole.length; i++) newHole.lineTo(hole[i].x, -hole[i].y);
+                                newShape.holes.push(newHole);
+                            }
+                        });
+                        globalShapes.push(newShape);
                     }
-                    pts.holes.forEach(hole => {
-                        if(hole.length > 0) {
-                            const newHole = new THREE.Path();
-                            newHole.moveTo(hole[0].x, -hole[0].y);
-                            for(let i=1; i<hole.length; i++) newHole.lineTo(hole[i].x, -hole[i].y);
-                            newShape.holes.push(newHole);
-                        }
-                    });
-                    globalShapes.push(newShape);
                 });
                 
                 generateKeychain();
@@ -514,15 +507,18 @@
         }
         
         async function generateKeychain() {
+            let shapesToProcess = [];
+
             if (modeSelect.value === 'text') {
                 if(!loadedFont) return;
                 const textStr = nameInput.value.trim();
                 if(textStr.length === 0) return;
-                globalShapes = loadedFont.generateShapes(textStr, 10);
+                shapesToProcess = loadedFont.generateShapes(textStr, 10);
+            } else {
+                if (!globalShapes || globalShapes.length === 0) return;
+                shapesToProcess = globalShapes;
             }
 
-            if (!globalShapes || globalShapes.length === 0) return;
-            
             showLoading(true, "Construindo STL...");
             await new Promise(r => setTimeout(r, 10));
             
@@ -533,10 +529,13 @@
                 
                 const clipperScale = 1000;
                 const outerPaths = [];
-                globalShapes.forEach(shape => {
+                
+                // Extrai o contorno principal de todos os elementos (Texto ou Imagem) para a base
+                shapesToProcess.forEach(shape => {
                     const points = shape.extractPoints(8);
-                    const path = points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) }));
-                    outerPaths.push(path);
+                    if (points.shape && points.shape.length > 2) {
+                        outerPaths.push(points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
+                    }
                 });
                 
                 const currentThickness = parseFloat(thicknessSlider.value) || 1.5;
@@ -553,6 +552,7 @@
                     minY = Math.min(minY, p.Y); maxY = Math.max(maxY, p.Y); 
                 }));
                 
+                // Calcula a posição da argola à esquerda
                 const ringRadius = 4.8 * clipperScale;
                 const holeRadius = 2.6 * clipperScale;
                 const cx = minX - holeRadius - 2 * clipperScale;
@@ -605,7 +605,7 @@
                 
                 const currentBaseThickness = parseFloat(baseThicknessSlider.value) || 3.0;
                 const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, { depth: Math.max(0.2, currentBaseThickness - 0.7), bevelEnabled: true, bevelThickness: 0.7, bevelSize: 0.55, bevelSegments: 4, curveSegments: 8 });
-                const textGeo = new THREE.ExtrudeGeometry(globalShapes, { depth: parseFloat(textThicknessSlider.value) || 1.5, bevelEnabled: false, curveSegments: 8 });
+                const textGeo = new THREE.ExtrudeGeometry(shapesToProcess, { depth: parseFloat(textThicknessSlider.value) || 1.5, bevelEnabled: false, curveSegments: 8 });
                 
                 baseGeo.computeBoundingBox();
                 const originalWidth = baseGeo.boundingBox.max.x - baseGeo.boundingBox.min.x;
@@ -637,7 +637,7 @@
             if(!baseMesh || !textMesh || isGenerating) return;
             try {
                 const exporter = new THREE.STLExporter();
-                const safeName = (modeSelect.value === 'text' ? nameInput.value : 'imagem').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const safeName = (modeSelect.value === 'text' ? nameInput.value : 'imagem').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'keyforge';
                 const mode = exportMode.value;
                 
                 const downloadFile = (stlData, filename) => {
@@ -649,6 +649,9 @@
                     setTimeout(() => URL.revokeObjectURL(url), 200);
                 };
                 
+                downloadBtn.style.transform = 'scale(0.96)';
+                setTimeout(() => { downloadBtn.style.transform = ''; }, 120);
+
                 if (mode === 'multi') {
                     downloadFile(exporter.parse(baseMesh), `keyforge_base_${safeName}.stl`);
                     setTimeout(() => downloadFile(exporter.parse(textMesh), `keyforge_topo_${safeName}.stl`), 300);
@@ -664,7 +667,8 @@
             if(debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => generateKeychain(), 250);
         }
-        
+
+        // --- SISTEMA DE FONTES À PROVA DE FALHAS ---
         function switchFont(fontKey) {
             if (fontKey === 'custom_file') { customFontInput.click(); return; }
             if (fontCache[fontKey]) { loadedFont = fontCache[fontKey]; lastSelectedFont = fontKey; triggerGeneration(); return; }
@@ -674,18 +678,28 @@
 
             showLoading(true, "Baixando Fonte...");
             const fontLoader = new THREE.FontLoader();
+            
+            let hasError = false;
+            const onError = () => {
+                hasError = true;
+                showError("Rede falhou ao baixar a fonte. Voltando ao normal.");
+                fontSelect.value = lastSelectedFont;
+                showLoading(false);
+            };
 
             if (fontConfig.type === 'json') {
                 fontLoader.load(fontConfig.url, (font) => {
+                    if(hasError) return;
                     fontCache[fontKey] = font; loadedFont = font; lastSelectedFont = fontKey;
                     showLoading(false); triggerGeneration();
-                });
+                }, undefined, onError);
             } else if (fontConfig.type === 'ttf') {
                 new THREE.TTFLoader().load(fontConfig.url, (json) => {
+                    if(hasError) return;
                     const font = fontLoader.parse(json);
                     fontCache[fontKey] = font; loadedFont = font; lastSelectedFont = fontKey;
                     showLoading(false); triggerGeneration();
-                });
+                }, undefined, onError);
             }
         }
 
@@ -704,11 +718,11 @@
                     fontSelect.insertBefore(opt, fontSelect.lastElementChild);
                     fontSelect.value = customKey; lastSelectedFont = customKey; loadedFont = font;
                     showLoading(false); triggerGeneration();
-                } catch (err) { showError("Fonte inválida."); }
+                } catch (err) { showError("Fonte inválida."); showLoading(false); fontSelect.value = lastSelectedFont; }
             };
             reader.readAsArrayBuffer(file);
         });
-
+        
         nameInput.addEventListener('input', triggerGeneration);
         fontSelect.addEventListener('change', (e) => switchFont(e.target.value));
         lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; triggerGeneration(); });
@@ -724,7 +738,9 @@
             loadedFont = new THREE.FontLoader().parse(fontData);
             fontCache['chewy'] = loadedFont;
             triggerGeneration();
-        } catch(error) {}
+        } catch(error) {
+            showError("Erro ao iniciar fonte principal.");
+        }
         
         function animate() {
             requestAnimationFrame(animate);
