@@ -1,4 +1,4 @@
-const CACHE_NAME = 'keyforge-3d-v3';
+const CACHE_NAME = 'keyforge-3d-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,10 +10,10 @@ const ASSETS_TO_CACHE = [
   'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/TTFLoader.js',
   'https://unpkg.com/clipper-lib@1.0.0/clipper.js',
-  'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.0.8/files/montserrat-latin-black-normal.woff',
-  'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/pacifico/Pacifico-Regular.ttf',
-  'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/bungee/Bungee-Regular.ttf',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json'
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/optimer_bold.typeface.json',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/gentilis_bold.typeface.json',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/droid/droid_sans_bold.typeface.json'
 ];
 
 self.addEventListener('install', (event) => {
