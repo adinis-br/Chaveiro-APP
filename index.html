@@ -524,7 +524,7 @@
                 if(baseMesh) { scene.remove(baseMesh); if(baseMesh.geometry) baseMesh.geometry.dispose(); }
                 if(textMesh) { scene.remove(textMesh); if(textMesh.geometry) textMesh.geometry.dispose(); }
                 
-                // --- CÁLCULO DE ESCALA PARA CORREÇÃO DA IMAGEM GIGANTE ---
+                // 1. CÁLCULO DE ESCALA
                 let minX_raw = Infinity, maxX_raw = -Infinity;
                 shapesToProcess.forEach(shape => {
                     const pts = shape.extractPoints(8);
@@ -538,13 +538,11 @@
                 if (originalWidth <= 0 || originalWidth === Infinity) originalWidth = 1;
 
                 const targetLength = parseFloat(lengthSlider.value) || 60;
-                // mmToRaw converte milímetros no tamanho original (texto ou pixels)
                 const mmToRaw = originalWidth / targetLength; 
 
                 const clipperScale = 1000;
                 const rawPaths = [];
                 
-                // Extração garantindo a orientação correta dos polígonos
                 shapesToProcess.forEach(shape => {
                     const points = shape.extractPoints(8);
                     if (points.shape && points.shape.length > 2) {
@@ -554,7 +552,6 @@
                     }
                 });
 
-                // União de contornos para garantir massa sólida única
                 const clPrep = new ClipperLib.Clipper();
                 clPrep.AddPaths(rawPaths, ClipperLib.PolyType.ptSubject, true);
                 const mergedPaths = new ClipperLib.Paths();
@@ -562,30 +559,40 @@
 
                 const pathsToOffset = mergedPaths.length > 0 ? mergedPaths : rawPaths;
                 
-                // Aplicação das dimensões com precisão convertida
                 const currentThicknessMm = parseFloat(thicknessSlider.value) || 1.5;
                 const offsetDistRaw = currentThicknessMm * mmToRaw * clipperScale;
+                
+                // FIX DA BASE SÓLIDA: Soldagem Morfológica (Expande para fechar buracos e encolhe)
+                const closeDist = 4.0 * mmToRaw * clipperScale;
 
-                const co = new ClipperLib.ClipperOffset();
-                co.AddPaths(pathsToOffset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-                const offsetPaths = new ClipperLib.Paths();
-                co.Execute(offsetPaths, offsetDistRaw);
+                const co1 = new ClipperLib.ClipperOffset();
+                co1.AddPaths(pathsToOffset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+                const dilatedPaths = new ClipperLib.Paths();
+                co1.Execute(dilatedPaths, offsetDistRaw + closeDist);
                 
-                if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
+                const co2 = new ClipperLib.ClipperOffset();
+                co2.AddPaths(dilatedPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+                const basePaths = new ClipperLib.Paths();
+                co2.Execute(basePaths, -closeDist);
                 
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                offsetPaths.forEach(path => path.forEach(p => { 
-                    minX = Math.min(minX, p.X); maxX = Math.max(maxX, p.X); 
-                    minY = Math.min(minY, p.Y); maxY = Math.max(maxY, p.Y); 
-                }));
+                if(!basePaths || basePaths.length === 0) throw new Error("Imagem muito fina ou vazia.");
                 
-                // Tamanhos corretos e dinâmicos para a argola
+                // FIX DA ARGOLA: Encontra o ponto EXATO mais à esquerda da malha fundida para grudar a argola
+                let leftMostPoint = { X: Infinity, Y: 0 };
+                basePaths.forEach(path => {
+                    path.forEach(p => { 
+                        if (p.X < leftMostPoint.X) {
+                            leftMostPoint = { X: p.X, Y: p.Y };
+                        }
+                    });
+                });
+                
                 const ringRadiusRaw = 4.8 * mmToRaw * clipperScale;
                 const holeRadiusRaw = 2.6 * mmToRaw * clipperScale;
-                const paddingRaw = 2.0 * mmToRaw * clipperScale;
+                const overlapRaw = ringRadiusRaw * 0.65; // Sobreposição garantida para morder o plástico
                 
-                const cx = minX - holeRadiusRaw - paddingRaw;
-                const cy = (minY + maxY) / 2;
+                const cx = leftMostPoint.X - ringRadiusRaw + overlapRaw;
+                const cy = leftMostPoint.Y; // Alinha exatamente na ponta da moto
                 
                 const ringOuter = [], ringInner = [];
                 const segments = 40;
@@ -600,7 +607,7 @@
                 
                 const cl1 = new ClipperLib.Clipper();
                 const unionPaths = new ClipperLib.Paths();
-                cl1.AddPaths(offsetPaths, ClipperLib.PolyType.ptSubject, true);
+                cl1.AddPaths(basePaths, ClipperLib.PolyType.ptSubject, true);
                 cl1.AddPaths([ringOuter], ClipperLib.PolyType.ptSubject, true);
                 cl1.Execute(ClipperLib.ClipType.ctUnion, unionPaths, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
                 
@@ -626,10 +633,24 @@
                     for(let j = 0; j < holeNodes.length; j++) {
                         const hContour = getContour(holeNodes[j]);
                         if(hContour && hContour.length > 2) {
-                            const holePath = new THREE.Path();
-                            holePath.moveTo(hContour[0].X / clipperScale, hContour[0].Y / clipperScale);
-                            for(let k = 1; k < hContour.length; k++) holePath.lineTo(hContour[k].X / clipperScale, hContour[k].Y / clipperScale);
-                            shape.holes.push(holePath);
+                            
+                            // FILTRO DE BURACOS: Deleta todos os furos internos da imagem/texto, mantendo SÓ o furo da argola
+                            let hMinX = Infinity, hMaxX = -Infinity, hMinY = Infinity, hMaxY = -Infinity;
+                            hContour.forEach(p => {
+                                hMinX = Math.min(hMinX, p.X); hMaxX = Math.max(hMaxX, p.X);
+                                hMinY = Math.min(hMinY, p.Y); hMaxY = Math.max(hMaxY, p.Y);
+                            });
+                            const hCenterX = (hMinX + hMaxX) / 2;
+                            const hCenterY = (hMinY + hMaxY) / 2;
+                            
+                            const dist = Math.sqrt(Math.pow(hCenterX - cx, 2) + Math.pow(hCenterY - cy, 2));
+                            
+                            if (dist < ringRadiusRaw * 1.5) { // Somente o furo da argola passa pelo filtro!
+                                const holePath = new THREE.Path();
+                                holePath.moveTo(hContour[0].X / clipperScale, hContour[0].Y / clipperScale);
+                                for(let k = 1; k < hContour.length; k++) holePath.lineTo(hContour[k].X / clipperScale, hContour[k].Y / clipperScale);
+                                shape.holes.push(holePath);
+                            }
                         }
                     }
                     baseThreeShapes.push(shape);
@@ -655,7 +676,6 @@
                     curveSegments: 8 
                 });
                 
-                // Aplica a escala exata em XYZ para renderizar tudo corretamente em milímetros finais
                 const scaleFactor = targetLength / originalWidth;
                 baseGeo.scale(scaleFactor, scaleFactor, scaleFactor);
                 textGeo.scale(scaleFactor, scaleFactor, scaleFactor);
