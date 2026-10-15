@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KeyForge 3D</title>
     
-    <!-- Configurações de PWA para Android e iOS (iPhone) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
@@ -15,312 +15,134 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><circle cx='35' cy='50' r='18' fill='none' stroke='%2310b981' stroke-width='8'/><path d='M53 50 H85 M70 50 V65 M82 50 V65' stroke='%2310b981' stroke-width='8' stroke-linecap='round'/></svg>">
 
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         :root {
-            --primary: #059669;
-            --primary-dark: #047857;
-            --primary-light: #10b981;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --surface: #ffffff;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border: #334155;
-            --error: #ef4444;
-            --success: #22c55e;
+            --primary: #059669; --primary-dark: #047857; --primary-light: #10b981;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --surface: #ffffff;
+            --text-primary: #f1f5f9; --text-secondary: #94a3b8; --border: #334155;
+            --error: #ef4444; --success: #22c55e;
         }
-
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            min-height: 100vh;
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
+            min-height: 100vh; overflow: hidden; position: fixed; width: 100%; height: 100%;
         }
-
         .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            width: 100vw;
-            max-width: 100%;
-            position: relative;
-            overflow: hidden;
+            display: flex; flex-direction: column; height: 100vh; height: 100dvh;
+            width: 100vw; max-width: 100%; position: relative; overflow: hidden;
             padding-top: env(safe-area-inset-top);
         }
-
         .header {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(5, 150, 105, 0.3);
-            z-index: 20;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+            padding: 12px 16px; border-bottom: 1px solid rgba(5, 150, 105, 0.3);
+            z-index: 20; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
         }
-
         .header h1 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #10b981, #34d399);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 1.35rem; font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text;
+            background-clip: text; color: transparent; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;
         }
-
-        .header p {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
+        .header p { font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px; }
         #installAppBtn {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--primary-light);
-            border: 1px solid var(--primary);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
+            background: rgba(16, 185, 129, 0.2); color: var(--primary-light);
+            border: 1px solid var(--primary); padding: 6px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
         }
-
         .canvas-wrapper {
-            flex: 1;
-            position: relative;
-            min-height: 0;
-            background: rgba(0, 0, 0, 0.2);
-            margin: 8px 12px;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            cursor: grab;
+            flex: 1; position: relative; min-height: 0; background: rgba(0, 0, 0, 0.2);
+            margin: 8px 12px; border-radius: 24px; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); cursor: grab;
         }
-        .canvas-wrapper:active {
-            cursor: grabbing;
-        }
-
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-
+        .canvas-wrapper:active { cursor: grabbing; }
+        #canvas-container { width: 100%; height: 100%; touch-action: none; }
         .controls-panel {
-            background: rgba(30, 41, 59, 0.96);
-            backdrop-filter: blur(20px);
-            border-radius: 24px 24px 0 0;
-            padding: 16px 16px calc(20px + env(safe-area-inset-bottom));
-            border-top: 1px solid rgba(5, 150, 105, 0.3);
-            flex-shrink: 0;
-            max-height: 56vh;
-            overflow-y: auto;
-            z-index: 15;
+            background: rgba(30, 41, 59, 0.96); backdrop-filter: blur(20px);
+            border-radius: 24px 24px 0 0; padding: 16px 16px calc(20px + env(safe-area-inset-bottom));
+            border-top: 1px solid rgba(5, 150, 105, 0.3); flex-shrink: 0;
+            max-height: 60vh; overflow-y: auto; z-index: 15;
         }
-
         .controls-panel::-webkit-scrollbar { width: 3px; }
         .controls-panel::-webkit-scrollbar-track { background: var(--border); border-radius: 10px; }
         .controls-panel::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-
         .form-group { margin-bottom: 12px; }
-        .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+        .form-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-end; }
         .form-row .form-group { flex: 1; margin-bottom: 0; }
-
         label {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
+            display: flex; justify-content: space-between; align-items: baseline; font-size: 0.7rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-secondary); margin-bottom: 6px;
         }
-
         .value-display {
-            color: var(--primary-light);
-            font-weight: 700;
-            background: rgba(5, 150, 105, 0.2);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.65rem;
+            color: var(--primary-light); font-weight: 700; background: rgba(5, 150, 105, 0.2);
+            padding: 2px 8px; border-radius: 20px; font-size: 0.65rem;
         }
-
         input[type="text"] {
-            width: 100%;
-            padding: 11px 14px;
-            background: var(--bg-dark);
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            font-weight: 500;
-            transition: all 0.2s ease;
-            -webkit-appearance: none;
-            user-select: text;
-            -webkit-user-select: text;
+            width: 100%; padding: 11px 14px; background: var(--bg-dark); border: 1.5px solid var(--border);
+            border-radius: 14px; font-size: 0.95rem; color: var(--text-primary); font-weight: 500;
+            transition: all 0.2s ease; -webkit-appearance: none; user-select: text; -webkit-user-select: text;
         }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
-        }
-
+        input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2); }
         input[type="range"] {
-            width: 100%;
-            height: 5px;
-            -webkit-appearance: none;
-            background: var(--border);
-            border-radius: 10px;
-            outline: none;
+            width: 100%; height: 5px; -webkit-appearance: none; background: var(--border);
+            border-radius: 10px; outline: none; margin-top: 8px;
         }
-
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--surface);
-            transition: transform 0.1s;
+            -webkit-appearance: none; width: 22px; height: 22px; background: var(--primary);
+            border-radius: 50%; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--surface); transition: transform 0.1s;
         }
-
         input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.15); }
-
-        select {
-            width: 100%;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            border: 1.5px solid var(--border);
-            border-radius: 12px;
-            padding: 10px 12px;
-            font-size: 0.85rem;
-            outline: none;
-            cursor: pointer;
-            font-weight: 600;
+        select, .btn-secondary {
+            width: 100%; background: var(--bg-dark); color: var(--text-primary);
+            border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 12px;
+            font-size: 0.85rem; outline: none; cursor: pointer; font-weight: 600;
         }
-
-        select:focus {
-            border-color: var(--primary);
+        select:focus { border-color: var(--primary); }
+        .btn-secondary {
+            background: rgba(16, 185, 129, 0.1); border-color: var(--primary); color: var(--primary-light);
+            text-align: center; display: inline-block; padding: 11px 14px; margin-top: 2px;
         }
-
         .btn-primary {
-            width: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            margin-top: 4px;
-            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
-            -webkit-tap-highlight-color: transparent;
+            width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; border: none; padding: 14px; border-radius: 18px; font-size: 0.95rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            transition: all 0.15s ease; margin-top: 8px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
         }
-
-        .btn-primary:active {
-            transform: scale(0.97);
-            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            transform: none;
-            cursor: not-allowed;
-        }
-
+        .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3); }
+        .btn-primary:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
         .overlay-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            padding: 12px 24px;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            z-index: 30;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid rgba(5, 150, 105, 0.5);
-            pointer-events: none;
-            white-space: nowrap;
-            font-size: 0.85rem;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); padding: 12px 24px;
+            border-radius: 40px; color: white; font-weight: 600; z-index: 30; display: flex;
+            align-items: center; gap: 12px; border: 1px solid rgba(5, 150, 105, 0.5); font-size: 0.85rem;
         }
-
         .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        #error-box {
-            background: rgba(239, 68, 68, 0.95);
-            border: 1px solid rgba(239, 68, 68, 0.5);
-        }
-
-        .badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            background: rgba(5, 150, 105, 0.15);
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 0.65rem;
-            color: var(--primary-light);
-            margin-top: 10px;
-        }
-
+        #error-box { background: rgba(239, 68, 68, 0.95); border: 1px solid rgba(239, 68, 68, 0.5); }
         .hidden { display: none !important; }
-
+        .badge {
+            display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(5, 150, 105, 0.15);
+            padding: 6px 12px; border-radius: 30px; font-size: 0.65rem; color: var(--primary-light); margin-top: 10px;
+        }
         @media (max-width: 380px) {
             .controls-panel { padding: 12px 12px 16px; max-height: 52vh; }
             .btn-primary { padding: 12px; font-size: 0.85rem; }
-            .form-group { margin-bottom: 10px; }
-            .form-row { gap: 8px; margin-bottom: 10px; }
             .header h1 { font-size: 1.2rem; }
         }
     </style>
 
-    <!-- Bibliotecas Three.js, Clipper e Suporte a Fontes TTF -->
+    <!-- Bibliotecas Three.js, Fontes, SVG Loader e ImageTracer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/TTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/SVGLoader.js"></script>
     <script src="https://unpkg.com/clipper-lib@1.0.0/clipper.js"></script>
+    <script src="https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
     <script src="fonte_customizada.js"></script>
 </head>
 <body>
@@ -329,7 +151,7 @@
     <div class="header">
         <div>
             <h1>🔑 KeyForge 3D</h1>
-            <p>Gerador de Chaveiros para Impressão 3D</p>
+            <p>Gerador 2D para 3D e Textos</p>
         </div>
         <button id="installAppBtn" class="hidden">📲 Instalar App</button>
     </div>
@@ -344,30 +166,54 @@
     </div>
     
     <div class="controls-panel">
-        <div class="form-row">
+        
+        <!-- SELETOR DE MODO -->
+        <div class="form-group" style="background: rgba(5, 150, 105, 0.1); padding: 10px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(5, 150, 105, 0.3);">
+            <label style="color: var(--primary-light); margin-bottom: 8px;">🛠️ Modo de Criação</label>
+            <select id="modeSelect">
+                <option value="text">✍️ Modo Texto (Nomes & Placas)</option>
+                <option value="image">🖼️ Modo Imagem (Logos & Desenhos)</option>
+            </select>
+        </div>
+
+        <!-- CONTROLES MODO TEXTO -->
+        <div id="textGroup" class="form-row">
             <div class="form-group" style="flex: 1.3;">
-                <label>
-                    <span>📝 Nome</span>
-                    <span class="value-display">máx 20</span>
-                </label>
+                <label><span>📝 Nome</span><span class="value-display">máx 20</span></label>
                 <input type="text" id="nameInput" value="Chaveiro3D" maxlength="20" autocomplete="off">
             </div>
             <div class="form-group" style="flex: 1;">
-                <label>
-                    <span>🔤 Fonte</span>
-                </label>
+                <label><span>🔤 Fonte</span></label>
                 <select id="fontSelect">
                     <option value="chewy">Chewy (Divertida)</option>
-                    <option value="helvetiker">Helvetiker (Moderna)</option>
-                    <option value="optimer">Optimer (Elegante)</option>
-                    <option value="gentilis">Gentilis (Clássica)</option>
-                    <option value="droid">Droid Sans (Forte)</option>
-                    <option value="custom_file">📂 Arquivo .TTF...</option>
+                    <option value="montserrat">Montserrat (Moderna)</option>
+                    <option value="pacifico">Pacifico (Cursiva)</option>
+                    <option value="bungee">Bungee (Forte)</option>
+                    <option value="helvetiker">Helvetiker (Clássica)</option>
+                    <option value="custom_file">📂 TTF / OTF...</option>
                 </select>
                 <input type="file" id="customFontInput" accept=".ttf,.otf" class="hidden">
             </div>
         </div>
+
+        <!-- CONTROLES MODO IMAGEM -->
+        <div id="imageGroup" class="hidden">
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label><span>📂 Arquivo (JPG, PNG, SVG)</span></label>
+                    <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.svg" class="hidden">
+                    <div id="uploadImageBtn" class="btn-secondary">
+                        <span id="imageBtnText">Toque para selecionar imagem</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>🎚️ Filtro de Contraste <span id="thresholdValue" class="value-display">128</span></label>
+                <input type="range" id="thresholdSlider" min="1" max="254" step="1" value="128">
+            </div>
+        </div>
         
+        <!-- PARÂMETROS GERAIS (Tamanho e Espessura) -->
         <div class="form-row">
             <div class="form-group">
                 <label>📏 Comprimento <span id="lengthValue" class="value-display">60mm</span></label>
@@ -390,8 +236,7 @@
             </div>
         </div>
 
-        <div class="form-group" style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 14px; border: 1px solid rgba(16, 185, 129, 0.2);">
-            <label style="color: var(--primary-light); margin-bottom: 8px;">🎨 Tipo de Exportação</label>
+        <div class="form-group">
             <select id="exportMode">
                 <option value="multi">Multicolor (Baixar 2 STLs separados)</option>
                 <option value="single">Cor Única (Baixar 1 STL mesclado)</option>
@@ -399,17 +244,13 @@
         </div>
         
         <button id="downloadBtn" class="btn-primary" disabled>📥 Exportar Arquivo(s)</button>
-        <div class="badge">
-            <span>🎯</span> Arraste para girar | Dois dedos para zoom
-        </div>
+        <div class="badge"><span>🎯</span> Arraste para girar | Dois dedos para zoom</div>
     </div>
 </div>
 
 <script>
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW falhou:', err));
-        });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
     }
 
     let deferredPrompt;
@@ -430,16 +271,25 @@
     });
 
     (function(){
-        let scene, camera, renderer, controls, baseMesh, textMesh, loadedFont = null, debounceTimer;
-        const fontCache = {}; 
+        let scene, camera, renderer, controls, baseMesh, textMesh;
+        let loadedFont = null, globalShapes = [], debounceTimer, rasterDebounce, uploadedImageObj = null;
         
-        // Substituído para Fontes Nativas do Three.js (.json) à prova de erros de rede (CORS)
+        const fontCache = {}; 
         const FONT_URLS = {
-            helvetiker: { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json' },
-            optimer:    { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/optimer_bold.typeface.json' },
-            gentilis:   { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/gentilis_bold.typeface.json' },
-            droid:      { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/droid/droid_sans_bold.typeface.json' }
+            montserrat: { type: 'ttf', url: 'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.0.8/files/montserrat-latin-black-normal.woff' },
+            pacifico:   { type: 'ttf', url: 'https://cdn.jsdelivr.net/npm/@fontsource/pacifico@5.0.8/files/pacifico-latin-regular-normal.woff' },
+            bungee:     { type: 'ttf', url: 'https://cdn.jsdelivr.net/npm/@fontsource/bungee@5.0.8/files/bungee-latin-regular-normal.woff' },
+            helvetiker: { type: 'json', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json' }
         };
+
+        const modeSelect = document.getElementById('modeSelect');
+        const textGroup = document.getElementById('textGroup');
+        const imageGroup = document.getElementById('imageGroup');
+        const imageInput = document.getElementById('imageInput');
+        const uploadImageBtn = document.getElementById('uploadImageBtn');
+        const imageBtnText = document.getElementById('imageBtnText');
+        const thresholdSlider = document.getElementById('thresholdSlider');
+        const thresholdValue = document.getElementById('thresholdValue');
 
         const nameInput = document.getElementById('nameInput');
         const fontSelect = document.getElementById('fontSelect');
@@ -471,7 +321,7 @@
             } else {
                 loadingDiv.classList.add('hidden');
                 isGenerating = false;
-                if(loadedFont) downloadBtn.disabled = false;
+                if(globalShapes.length > 0) downloadBtn.disabled = false;
             }
         }
         
@@ -482,10 +332,8 @@
             isGenerating = false;
             downloadBtn.disabled = true;
             setTimeout(() => {
-                if(errorBox && !errorBox.classList.contains('hidden')) {
-                    errorBox.classList.add('hidden');
-                    if(loadedFont) downloadBtn.disabled = false;
-                }
+                if(!errorBox.classList.contains('hidden')) errorBox.classList.add('hidden');
+                if(globalShapes.length > 0) downloadBtn.disabled = false;
             }, 4000);
         }
         
@@ -493,90 +341,189 @@
             const container = document.getElementById('canvas-container');
             const width = container.clientWidth;
             const height = container.clientHeight;
-            
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
             scene.fog = new THREE.FogExp2(0x0f172a, 0.006);
-            
             camera = new THREE.PerspectiveCamera(42, width / height, 0.5, 500);
             camera.position.set(0, -50, 60);
             camera.lookAt(0, 0, 0);
-            
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
             renderer.setSize(width, height);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
-            
             controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.06;
-            controls.rotateSpeed = 1.2;
-            controls.zoomSpeed = 1.0;
-            controls.enableZoom = true;
-            controls.enablePan = true;
-            controls.panSpeed = 0.6;
-            controls.touchRotate = true;
-            controls.touchZoom = true;
+            controls.enableDamping = true; controls.dampingFactor = 0.06;
             controls.target.set(0, 0, 2);
-            
-            const ambientLight = new THREE.AmbientLight(0x404060);
-            scene.add(ambientLight);
-            
+            scene.add(new THREE.AmbientLight(0x404060));
             const mainLight = new THREE.DirectionalLight(0xffffff, 1.1);
-            mainLight.position.set(12, 22, 18);
-            mainLight.castShadow = true;
+            mainLight.position.set(12, 22, 18); mainLight.castShadow = true;
             scene.add(mainLight);
-            
-            const fillLight = new THREE.PointLight(0x4488cc, 0.45);
-            fillLight.position.set(-12, 6, 22);
-            scene.add(fillLight);
-            
-            const backLight = new THREE.PointLight(0xffaa66, 0.35);
-            backLight.position.set(6, 12, -18);
-            scene.add(backLight);
-            
-            const rimLight = new THREE.PointLight(0x66ccaa, 0.5);
-            rimLight.position.set(-6, 10, -14);
-            scene.add(rimLight);
-            
-            const warmFill = new THREE.PointLight(0xff9966, 0.25);
-            warmFill.position.set(8, -5, 10);
-            scene.add(warmFill);
-            
-            const gridHelper = new THREE.GridHelper(120, 20, 0x334155, 0x1e293b);
-            gridHelper.position.y = -12;
-            gridHelper.material.transparent = true;
-            gridHelper.material.opacity = 0.2;
-            scene.add(gridHelper);
-            
+            scene.add(new THREE.PointLight(0x4488cc, 0.45, 0, 0));
+            scene.add(new THREE.PointLight(0xffaa66, 0.35, 0, 0));
+            const grid = new THREE.GridHelper(120, 20, 0x334155, 0x1e293b);
+            grid.position.y = -12; grid.material.opacity = 0.2; grid.material.transparent = true;
+            scene.add(grid);
             window.addEventListener('resize', onWindowResize);
         }
         
         function onWindowResize() {
             const container = document.getElementById('canvas-container');
             if(!container || !camera || !renderer) return;
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            camera.aspect = width / height;
+            camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        modeSelect.addEventListener('change', () => {
+            if (modeSelect.value === 'text') {
+                textGroup.classList.remove('hidden');
+                imageGroup.classList.add('hidden');
+                triggerGeneration();
+            } else {
+                textGroup.classList.add('hidden');
+                imageGroup.classList.remove('hidden');
+                if (uploadedImageObj) {
+                    processRaster(uploadedImageObj);
+                } else {
+                    if(baseMesh) { scene.remove(baseMesh); baseMesh = null; }
+                    if(textMesh) { scene.remove(textMesh); textMesh = null; }
+                    globalShapes = [];
+                    downloadBtn.disabled = true;
+                }
+            }
+        });
+
+        uploadImageBtn.addEventListener('click', () => imageInput.click());
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            imageBtnText.innerText = "⭐ " + file.name;
+            showLoading(true, "Analisando Imagem...");
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                if (file.type.includes('svg')) {
+                    uploadedImageObj = null; // SVG doesn't need threshold re-render
+                    processSVG(event.target.result);
+                } else {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedImageObj = img;
+                        processRaster(img);
+                    };
+                    img.src = event.target.result;
+                }
+            };
+            if(file.type.includes('svg')) reader.readAsText(file);
+            else reader.readAsDataURL(file);
+        });
+
+        thresholdSlider.addEventListener('input', () => {
+            thresholdValue.innerText = thresholdSlider.value;
+            if(modeSelect.value === 'image' && uploadedImageObj) {
+                if(rasterDebounce) clearTimeout(rasterDebounce);
+                rasterDebounce = setTimeout(() => {
+                    showLoading(true, "Ajustando Contraste...");
+                    processRaster(uploadedImageObj);
+                }, 300);
+            }
+        });
+
+        function processRaster(img) {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxSize = 400; // Otimização para celulares
+                let w = img.width, h = img.height;
+                if (w > maxSize || h > maxSize) {
+                    const ratio = Math.min(maxSize/w, maxSize/h);
+                    w *= ratio; h *= ratio;
+                }
+                w = Math.floor(w); h = Math.floor(h);
+                canvas.width = w; canvas.height = h;
+                
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                const thresh = parseInt(thresholdSlider.value);
+                const imgData = ctx.getImageData(0, 0, w, h);
+                for(let i = 0; i < imgData.data.length; i += 4) {
+                    const r = imgData.data[i], g = imgData.data[i+1], b = imgData.data[i+2], a = imgData.data[i+3];
+                    const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+                    if (a > 128 && lum < thresh) {
+                        imgData.data[i]=0; imgData.data[i+1]=0; imgData.data[i+2]=0;
+                    } else {
+                        imgData.data[i]=255; imgData.data[i+1]=255; imgData.data[i+2]=255;
+                    }
+                    imgData.data[i+3] = 255;
+                }
+                
+                const svgStr = ImageTracer.imagedataToSVG(imgData, {
+                    ltres: 1, qtres: 1, pathomit: 8, colorsampling: 0, numberofcolors: 2, 
+                    scale: 1, simplifytolerance: 0, roundcoords: 1, viewbox: true
+                });
+                
+                processSVG(svgStr);
+            } catch(e) {
+                showError("Erro ao processar imagem.");
+                showLoading(false);
+            }
+        }
+
+        function processSVG(svgStr) {
+            try {
+                const loader = new THREE.SVGLoader();
+                const svgData = loader.parse(svgStr);
+                let tempShapes = [];
+                svgData.paths.forEach(path => {
+                    // Ignora fundos brancos gerados
+                    if (path.color.r > 0.9 && path.color.g > 0.9 && path.color.b > 0.9) return;
+                    tempShapes.push(...path.toShapes(true));
+                });
+                
+                if(tempShapes.length === 0) throw new Error("Aumente a Sensibilidade para detectar a imagem.");
+                
+                // Inverte o eixo Y para corrigir o espelhamento do SVGLoader
+                globalShapes = [];
+                tempShapes.forEach(shape => {
+                    const pts = shape.extractPoints(12);
+                    const newShape = new THREE.Shape();
+                    if(pts.shape.length > 0) {
+                        newShape.moveTo(pts.shape[0].x, -pts.shape[0].y);
+                        for(let i=1; i<pts.shape.length; i++) newShape.lineTo(pts.shape[i].x, -pts.shape[i].y);
+                    }
+                    pts.holes.forEach(hole => {
+                        if(hole.length > 0) {
+                            const newHole = new THREE.Path();
+                            newHole.moveTo(hole[0].x, -hole[0].y);
+                            for(let i=1; i<hole.length; i++) newHole.lineTo(hole[i].x, -hole[i].y);
+                            newShape.holes.push(newHole);
+                        }
+                    });
+                    globalShapes.push(newShape);
+                });
+                
+                generateKeychain();
+            } catch(e) {
+                showError(e.message || "Formato ou imagem não reconhecida.");
+                showLoading(false);
+            }
         }
         
         async function generateKeychain() {
-            if(!loadedFont) {
-                showError("Carregando fonte... Aguarde");
-                return;
+            if (modeSelect.value === 'text') {
+                if(!loadedFont) return;
+                const textStr = nameInput.value.trim();
+                if(textStr.length === 0) return;
+                globalShapes = loadedFont.generateShapes(textStr, 10);
             }
-            if(isGenerating) return;
+
+            if (!globalShapes || globalShapes.length === 0) return;
             
-            const textStr = nameInput.value.trim();
-            if(textStr.length === 0) {
-                showError("Digite um nome para o chaveiro");
-                return;
-            }
-            
-            showLoading(true, "Processando Malha 3D...");
+            showLoading(true, "Construindo STL...");
             await new Promise(r => setTimeout(r, 10));
             
             try {
@@ -585,25 +532,20 @@
                 if(textMesh) { scene.remove(textMesh); if(textMesh.geometry) textMesh.geometry.dispose(); }
                 
                 const clipperScale = 1000;
-                const textShapes = loadedFont.generateShapes(textStr, 10);
-                if(!textShapes || textShapes.length === 0) throw new Error("Não foi possível gerar formas do texto");
-                
-                const textOuterPaths = [];
-                textShapes.forEach(shape => {
+                const outerPaths = [];
+                globalShapes.forEach(shape => {
                     const points = shape.extractPoints(8);
                     const path = points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) }));
-                    textOuterPaths.push(path);
+                    outerPaths.push(path);
                 });
                 
                 const currentThickness = parseFloat(thicknessSlider.value) || 1.5;
-                const offsetDist = currentThickness * clipperScale;
-                
                 const co = new ClipperLib.ClipperOffset();
-                co.AddPaths(textOuterPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+                co.AddPaths(outerPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
                 const offsetPaths = new ClipperLib.Paths();
-                co.Execute(offsetPaths, offsetDist);
+                co.Execute(offsetPaths, currentThickness * clipperScale);
                 
-                if(!offsetPaths || offsetPaths.length === 0) throw new Error("Erro no offset. Tente uma borda menor.");
+                if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
                 
                 let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
                 offsetPaths.forEach(path => path.forEach(p => { 
@@ -641,8 +583,6 @@
                 
                 const baseThreeShapes = [];
                 const topNodes = getChilds(finalTree);
-                if(!topNodes || topNodes.length === 0) throw new Error("Falha na união com argola");
-                
                 for(let i = 0; i < topNodes.length; i++) {
                     const contour = getContour(topNodes[i]);
                     if(!contour || contour.length < 3) continue;
@@ -663,38 +603,16 @@
                     baseThreeShapes.push(shape);
                 }
                 
-                if(baseThreeShapes.length === 0) throw new Error("Nenhuma forma base gerada");
-                
                 const currentBaseThickness = parseFloat(baseThicknessSlider.value) || 3.0;
-                const baseDepth = Math.max(0.2, currentBaseThickness - 0.7);
-                
-                const extrudeSettingsBase = {
-                    depth: baseDepth,
-                    bevelEnabled: true,
-                    bevelThickness: 0.7,
-                    bevelSize: 0.55,
-                    bevelSegments: 4,
-                    curveSegments: 8
-                };
-                
-                const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, extrudeSettingsBase);
-                
-                const currentTextThickness = parseFloat(textThicknessSlider.value) || 1.5;
-                const extrudeSettingsText = {
-                    depth: currentTextThickness,
-                    bevelEnabled: false,
-                    curveSegments: 8
-                };
-                const textGeo = new THREE.ExtrudeGeometry(textShapes, extrudeSettingsText);
+                const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, { depth: Math.max(0.2, currentBaseThickness - 0.7), bevelEnabled: true, bevelThickness: 0.7, bevelSize: 0.55, bevelSegments: 4, curveSegments: 8 });
+                const textGeo = new THREE.ExtrudeGeometry(globalShapes, { depth: parseFloat(textThicknessSlider.value) || 1.5, bevelEnabled: false, curveSegments: 8 });
                 
                 baseGeo.computeBoundingBox();
                 const originalWidth = baseGeo.boundingBox.max.x - baseGeo.boundingBox.min.x;
-                const targetLength = parseFloat(lengthSlider.value) || 60;
-                const scaleFactor = targetLength / originalWidth;
+                const scaleFactor = (parseFloat(lengthSlider.value) || 60) / originalWidth;
                 
                 baseGeo.scale(scaleFactor, scaleFactor, 1);
                 textGeo.scale(scaleFactor, scaleFactor, 1);
-                
                 textGeo.translate(0, 0, currentBaseThickness);
                 
                 baseGeo.computeBoundingBox();
@@ -703,141 +621,54 @@
                 baseGeo.translate(centerX, centerY, 0);
                 textGeo.translate(centerX, centerY, 0);
                 
-                const baseMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x334155, 
-                    roughness: 0.45, 
-                    metalness: 0.65,
-                    emissive: 0x111122,
-                    emissiveIntensity: 0.12
-                });
-                const textMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x10b981, 
-                    roughness: 0.35, 
-                    metalness: 0.55,
-                    emissive: 0x064e3b,
-                    emissiveIntensity: 0.08
-                });
+                baseMesh = new THREE.Mesh(baseGeo, new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.65 }));
+                textMesh = new THREE.Mesh(textGeo, new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.35, metalness: 0.55 }));
                 
-                baseMesh = new THREE.Mesh(baseGeo, baseMaterial);
-                textMesh = new THREE.Mesh(textGeo, textMaterial);
-                
-                baseMesh.castShadow = true;
-                textMesh.castShadow = true;
-                
-                scene.add(baseMesh);
-                scene.add(textMesh);
-                
+                scene.add(baseMesh); scene.add(textMesh);
                 showLoading(false);
                 
             } catch(err) {
-                console.error("Erro 3D:", err);
-                showError(err.message || "Falha na geração. Ajuste os parâmetros.");
+                showError(err.message || "Erro na geração. Imagem muito complexa.");
                 showLoading(false);
             }
         }
         
         async function downloadSTLs() {
-            if(!baseMesh || !textMesh || isGenerating) {
-                showError("Aguarde o modelo ser gerado");
-                return;
-            }
+            if(!baseMesh || !textMesh || isGenerating) return;
             try {
                 const exporter = new THREE.STLExporter();
-                const safeName = nameInput.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'keyforge';
+                const safeName = (modeSelect.value === 'text' ? nameInput.value : 'imagem').trim().replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const mode = exportMode.value;
                 
-                downloadBtn.style.transform = 'scale(0.96)';
-                setTimeout(() => { downloadBtn.style.transform = ''; }, 120);
-
-                const downloadFileFallback = (stlData, filename) => {
+                const downloadFile = (stlData, filename) => {
                     const blob = new Blob([stlData], { type: 'application/vnd.ms-pki.stl' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    setTimeout(() => URL.revokeObjectURL(url), 500);
+                    link.href = url; link.download = filename;
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(url), 200);
                 };
-
+                
                 if (mode === 'multi') {
-                    const stlBase = exporter.parse(baseMesh);
-                    const stlText = exporter.parse(textMesh);
-                    const fileBaseName = `keyforge_base_${safeName}.stl`;
-                    const fileTextName = `keyforge_texto_${safeName}.stl`;
-
-                    const filesArray = [
-                        new File([stlBase], fileBaseName, { type: 'application/sla' }),
-                        new File([stlText], fileTextName, { type: 'application/sla' })
-                    ];
-
-                    if (navigator.canShare && navigator.canShare({ files: filesArray })) {
-                        try {
-                            await navigator.share({
-                                files: filesArray,
-                                title: `Chaveiro 3D - ${nameInput.value}`,
-                                text: 'Arquivos STL gerados no KeyForge 3D'
-                            });
-                            return;
-                        } catch (shareErr) {
-                            if (shareErr.name === 'AbortError') return;
-                        }
-                    }
-
-                    downloadFileFallback(stlBase, fileBaseName);
-                    setTimeout(() => {
-                        downloadFileFallback(stlText, fileTextName);
-                    }, 400);
-
+                    downloadFile(exporter.parse(baseMesh), `keyforge_base_${safeName}.stl`);
+                    setTimeout(() => downloadFile(exporter.parse(textMesh), `keyforge_topo_${safeName}.stl`), 300);
                 } else {
                     const group = new THREE.Group();
-                    group.add(baseMesh.clone());
-                    group.add(textMesh.clone());
-                    const stlMerged = exporter.parse(group);
-                    const fileMergedName = `keyforge_unificado_${safeName}.stl`;
-
-                    const filesArray = [new File([stlMerged], fileMergedName, { type: 'application/sla' })];
-                    if (navigator.canShare && navigator.canShare({ files: filesArray })) {
-                        try {
-                            await navigator.share({
-                                files: filesArray,
-                                title: `Chaveiro 3D - ${nameInput.value}`,
-                                text: 'Arquivo STL unificado gerado no KeyForge 3D'
-                            });
-                            return;
-                        } catch (shareErr) {
-                            if (shareErr.name === 'AbortError') return;
-                        }
-                    }
-
-                    downloadFileFallback(stlMerged, fileMergedName);
+                    group.add(baseMesh.clone()); group.add(textMesh.clone());
+                    downloadFile(exporter.parse(group), `keyforge_unificado_${safeName}.stl`);
                 }
-                
-            } catch(e) {
-                showError("Erro ao exportar STL");
-            }
+            } catch(e) { showError("Erro ao exportar STL"); }
         }
         
-        function debouncedGenerate() {
+        function triggerGeneration() {
             if(debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => generateKeychain(), 250);
         }
         
-        // Gerenciador de troca de fontes 
         function switchFont(fontKey) {
-            if (fontKey === 'custom_file') {
-                customFontInput.click();
-                return;
-            }
-
-            if (fontCache[fontKey]) {
-                loadedFont = fontCache[fontKey];
-                lastSelectedFont = fontKey;
-                generateKeychain();
-                return;
-            }
-
+            if (fontKey === 'custom_file') { customFontInput.click(); return; }
+            if (fontCache[fontKey]) { loadedFont = fontCache[fontKey]; lastSelectedFont = fontKey; triggerGeneration(); return; }
+            
             const fontConfig = FONT_URLS[fontKey];
             if (!fontConfig) return;
 
@@ -846,93 +677,54 @@
 
             if (fontConfig.type === 'json') {
                 fontLoader.load(fontConfig.url, (font) => {
-                    fontCache[fontKey] = font;
-                    loadedFont = font;
-                    lastSelectedFont = fontKey;
-                    showLoading(false);
-                    generateKeychain();
-                }, undefined, () => {
-                    fontSelect.value = lastSelectedFont;
-                    showError("Erro de rede. Tente outra fonte.");
+                    fontCache[fontKey] = font; loadedFont = font; lastSelectedFont = fontKey;
+                    showLoading(false); triggerGeneration();
                 });
             } else if (fontConfig.type === 'ttf') {
-                const ttfLoader = new THREE.TTFLoader();
-                ttfLoader.load(fontConfig.url, (json) => {
+                new THREE.TTFLoader().load(fontConfig.url, (json) => {
                     const font = fontLoader.parse(json);
-                    fontCache[fontKey] = font;
-                    loadedFont = font;
-                    lastSelectedFont = fontKey;
-                    showLoading(false);
-                    generateKeychain();
-                }, undefined, () => {
-                    fontSelect.value = lastSelectedFont;
-                    showError("Erro ao carregar fonte TTF.");
+                    fontCache[fontKey] = font; loadedFont = font; lastSelectedFont = fontKey;
+                    showLoading(false); triggerGeneration();
                 });
             }
         }
 
-        // Evento quando o usuário escolhe um arquivo .TTF ou .OTF do próprio celular/PC
         customFontInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (!file) {
-                fontSelect.value = lastSelectedFont;
-                return;
-            }
-            showLoading(true, "Lendo arquivo de fonte...");
+            if (!file) { fontSelect.value = lastSelectedFont; return; }
+            showLoading(true, "Lendo fonte...");
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
-                    const ttfLoader = new THREE.TTFLoader();
-                    const fontLoader = new THREE.FontLoader();
-                    const json = ttfLoader.parse(event.target.result);
-                    const font = fontLoader.parse(json);
-                    
+                    const font = new THREE.FontLoader().parse(new THREE.TTFLoader().parse(event.target.result));
                     const customKey = 'user_' + file.name;
                     fontCache[customKey] = font;
-                    
                     let opt = document.createElement('option');
-                    opt.value = customKey;
-                    opt.innerText = "⭐ " + file.name.replace(/\.(ttf|otf)$/i, '');
+                    opt.value = customKey; opt.innerText = "⭐ " + file.name.replace(/\.(ttf|otf)$/i, '');
                     fontSelect.insertBefore(opt, fontSelect.lastElementChild);
-                    fontSelect.value = customKey;
-                    lastSelectedFont = customKey;
-
-                    loadedFont = font;
-                    showLoading(false);
-                    generateKeychain();
-                } catch (err) {
-                    fontSelect.value = lastSelectedFont;
-                    showError("Arquivo .TTF/.OTF inválido ou incompatível.");
-                }
+                    fontSelect.value = customKey; lastSelectedFont = customKey; loadedFont = font;
+                    showLoading(false); triggerGeneration();
+                } catch (err) { showError("Fonte inválida."); }
             };
             reader.readAsArrayBuffer(file);
         });
 
-        function initFontAndStart() {
-            try {
-                let fontData = window.minhaFonteCustomizada || (typeof minhaFonteCustomizada !== 'undefined' ? minhaFonteCustomizada : null);
-                if(!fontData) throw new Error("Fonte não encontrada. Verifique fonte_customizada.js");
-                const loader = new THREE.FontLoader();
-                loadedFont = loader.parse(fontData);
-                fontCache['chewy'] = loadedFont;
-                showLoading(false);
-                generateKeychain();
-            } catch(error) {
-                showError("Erro na fonte: " + error.message);
-                console.error(error);
-            }
-        }
-        
-        nameInput.addEventListener('input', debouncedGenerate);
+        nameInput.addEventListener('input', triggerGeneration);
         fontSelect.addEventListener('change', (e) => switchFont(e.target.value));
-        lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; debouncedGenerate(); });
-        thicknessSlider.addEventListener('input', () => { thicknessValue.innerText = parseFloat(thicknessSlider.value).toFixed(1) + 'mm'; debouncedGenerate(); });
-        baseThicknessSlider.addEventListener('input', () => { baseThicknessValue.innerText = parseFloat(baseThicknessSlider.value).toFixed(1) + 'mm'; debouncedGenerate(); });
-        textThicknessSlider.addEventListener('input', () => { textThicknessValue.innerText = parseFloat(textThicknessSlider.value).toFixed(1) + 'mm'; debouncedGenerate(); });
+        lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; triggerGeneration(); });
+        thicknessSlider.addEventListener('input', () => { thicknessValue.innerText = parseFloat(thicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
+        baseThicknessSlider.addEventListener('input', () => { baseThicknessValue.innerText = parseFloat(baseThicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
+        textThicknessSlider.addEventListener('input', () => { textThicknessValue.innerText = parseFloat(textThicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
         downloadBtn.addEventListener('click', downloadSTLs);
         
         initThree();
-        initFontAndStart();
+        
+        try {
+            let fontData = window.minhaFonteCustomizada;
+            loadedFont = new THREE.FontLoader().parse(fontData);
+            fontCache['chewy'] = loadedFont;
+            triggerGeneration();
+        } catch(error) {}
         
         function animate() {
             requestAnimationFrame(animate);
