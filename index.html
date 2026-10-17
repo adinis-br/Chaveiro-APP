@@ -165,12 +165,23 @@
     
     <div class="controls-panel">
         
-        <div class="form-group" style="background: rgba(5, 150, 105, 0.1); padding: 10px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(5, 150, 105, 0.3);">
-            <label style="color: var(--primary-light); margin-bottom: 8px;">🛠️ Modo de Criação</label>
-            <select id="modeSelect">
-                <option value="text">✍️ Modo Texto (Nomes & Placas)</option>
-                <option value="image">🖼️ Modo Imagem (Logos & Desenhos)</option>
-            </select>
+        <div class="form-row" style="background: rgba(5, 150, 105, 0.1); padding: 10px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(5, 150, 105, 0.3);">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label style="color: var(--primary-light); margin-bottom: 8px;">🛠️ Modo Criação</label>
+                <select id="modeSelect">
+                    <option value="text">✍️ Texto</option>
+                    <option value="image">🖼️ Imagem</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label style="color: var(--primary-light); margin-bottom: 8px;">🔗 Argola</label>
+                <select id="ringPositionSelect">
+                    <option value="top">⬆️ Topo (Medalha)</option>
+                    <option value="left" selected>⬅️ Esquerda</option>
+                    <option value="right">➡️ Direita</option>
+                    <option value="bottom">⬇️ Fundo</option>
+                </select>
+            </div>
         </div>
 
         <div id="textGroup" class="form-row">
@@ -186,7 +197,7 @@
                     <option value="pacifico">Pacifico (Cursiva)</option>
                     <option value="bungee">Bungee (Gamer/Forte)</option>
                     <option value="helvetiker">Helvetiker (Clássica)</option>
-                    <option value="custom_file">📂 Arquivo .TTF/.OTF...</option>
+                    <option value="custom_file">📂 Arquivo .TTF...</option>
                 </select>
                 <input type="file" id="customFontInput" accept=".ttf,.otf" class="hidden">
             </div>
@@ -275,6 +286,7 @@
         };
 
         const modeSelect = document.getElementById('modeSelect');
+        const ringPositionSelect = document.getElementById('ringPositionSelect');
         const textGroup = document.getElementById('textGroup');
         const fontSelect = document.getElementById('fontSelect');
         const customFontInput = document.getElementById('customFontInput');
@@ -524,31 +536,13 @@
                 if(baseMesh) { scene.remove(baseMesh); if(baseMesh.geometry) baseMesh.geometry.dispose(); }
                 if(textMesh) { scene.remove(textMesh); if(textMesh.geometry) textMesh.geometry.dispose(); }
                 
-                // 1. CÁLCULO DE ESCALA
-                let minX_raw = Infinity, maxX_raw = -Infinity;
-                shapesToProcess.forEach(shape => {
-                    const pts = shape.extractPoints(8);
-                    pts.shape.forEach(p => {
-                        minX_raw = Math.min(minX_raw, p.x);
-                        maxX_raw = Math.max(maxX_raw, p.x);
-                    });
-                });
-
-                let originalWidth = maxX_raw - minX_raw;
-                if (originalWidth <= 0 || originalWidth === Infinity) originalWidth = 1;
-
-                const targetLength = parseFloat(lengthSlider.value) || 60;
-                const mmToRaw = originalWidth / targetLength; 
-
                 const clipperScale = 1000;
                 const rawPaths = [];
                 
                 shapesToProcess.forEach(shape => {
                     const points = shape.extractPoints(8);
                     if (points.shape && points.shape.length > 2) {
-                        let path = points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) }));
-                        if (!ClipperLib.Clipper.Orientation(path)) path.reverse();
-                        rawPaths.push(path);
+                        rawPaths.push(points.shape.map(p => ({ X: Math.round(p.x * clipperScale), Y: Math.round(p.y * clipperScale) })));
                     }
                 });
 
@@ -559,55 +553,65 @@
 
                 const pathsToOffset = mergedPaths.length > 0 ? mergedPaths : rawPaths;
                 
-                const currentThicknessMm = parseFloat(thicknessSlider.value) || 1.5;
-                const offsetDistRaw = currentThicknessMm * mmToRaw * clipperScale;
-                
-                // FIX DA BASE SÓLIDA: Soldagem Morfológica (Expande para fechar buracos e encolhe)
-                const closeDist = 4.0 * mmToRaw * clipperScale;
+                // --- AJUSTE MATEMÁTICO DE ESCALA PARA MANTER ARGOLA E BORDA PRECISAS ---
+                let rawMinX = Infinity, rawMaxX = -Infinity, rawMinY = Infinity, rawMaxY = -Infinity;
+                pathsToOffset.forEach(path => path.forEach(p => {
+                    rawMinX = Math.min(rawMinX, p.X); rawMaxX = Math.max(rawMaxX, p.X);
+                    rawMinY = Math.min(rawMinY, p.Y); rawMaxY = Math.max(rawMaxY, p.Y);
+                }));
 
-                const co1 = new ClipperLib.ClipperOffset();
-                co1.AddPaths(pathsToOffset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-                const dilatedPaths = new ClipperLib.Paths();
-                co1.Execute(dilatedPaths, offsetDistRaw + closeDist);
+                const rawWidthUnits = (rawMaxX - rawMinX) / clipperScale;
+                const targetLengthMM = parseFloat(lengthSlider.value) || 60;
+                const visualScale = rawWidthUnits > 0 ? (rawWidthUnits / targetLengthMM) : 1;
                 
-                const co2 = new ClipperLib.ClipperOffset();
-                co2.AddPaths(dilatedPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-                const basePaths = new ClipperLib.Paths();
-                co2.Execute(basePaths, -closeDist);
+                const currentThickness = parseFloat(thicknessSlider.value) || 1.5;
+                const offsetDist = currentThickness * visualScale * clipperScale;
+
+                const co = new ClipperLib.ClipperOffset();
+                co.AddPaths(pathsToOffset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+                const offsetPaths = new ClipperLib.Paths();
+                co.Execute(offsetPaths, offsetDist);
                 
-                if(!basePaths || basePaths.length === 0) throw new Error("Imagem muito fina ou vazia.");
+                if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
                 
-                // FIX DA ARGOLA: Encontra o ponto EXATO mais à esquerda da malha fundida para grudar a argola
-                let leftMostPoint = { X: Infinity, Y: 0 };
-                basePaths.forEach(path => {
-                    path.forEach(p => { 
-                        if (p.X < leftMostPoint.X) {
-                            leftMostPoint = { X: p.X, Y: p.Y };
-                        }
-                    });
-                });
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                offsetPaths.forEach(path => path.forEach(p => { 
+                    minX = Math.min(minX, p.X); maxX = Math.max(maxX, p.X); 
+                    minY = Math.min(minY, p.Y); maxY = Math.max(maxY, p.Y); 
+                }));
                 
-                const ringRadiusRaw = 4.8 * mmToRaw * clipperScale;
-                const holeRadiusRaw = 2.6 * mmToRaw * clipperScale;
-                const overlapRaw = ringRadiusRaw * 0.65; // Sobreposição garantida para morder o plástico
+                // --- LÓGICA DE POSICIONAMENTO DA ARGOLA ---
+                const ringPos = ringPositionSelect.value;
+                const ringRadius = 4.8 * visualScale * clipperScale;
+                const holeRadius = 2.6 * visualScale * clipperScale;
+                const overlap = 2.0 * visualScale * clipperScale;
                 
-                const cx = leftMostPoint.X - ringRadiusRaw + overlapRaw;
-                const cy = leftMostPoint.Y; // Alinha exatamente na ponta da moto
+                let cx, cy;
+                if (ringPos === 'top') {
+                    cx = (minX + maxX) / 2;
+                    cy = maxY + ringRadius - overlap;
+                } else if (ringPos === 'right') {
+                    cx = maxX + ringRadius - overlap;
+                    cy = (minY + maxY) / 2;
+                } else if (ringPos === 'bottom') {
+                    cx = (minX + maxX) / 2;
+                    cy = minY - ringRadius + overlap;
+                } else { // 'left' por padrão
+                    cx = minX - ringRadius + overlap;
+                    cy = (minY + maxY) / 2;
+                }
                 
                 const ringOuter = [], ringInner = [];
                 const segments = 40;
                 for(let i = 0; i <= segments; i++) {
                     const a = (i / segments) * Math.PI * 2;
-                    ringOuter.push({ X: Math.round(cx + Math.cos(a) * ringRadiusRaw), Y: Math.round(cy + Math.sin(a) * ringRadiusRaw) });
-                    ringInner.push({ X: Math.round(cx + Math.cos(a) * holeRadiusRaw), Y: Math.round(cy + Math.sin(a) * holeRadiusRaw) });
+                    ringOuter.push({ X: Math.round(cx + Math.cos(a) * ringRadius), Y: Math.round(cy + Math.sin(a) * ringRadius) });
+                    ringInner.push({ X: Math.round(cx + Math.cos(a) * holeRadius), Y: Math.round(cy + Math.sin(a) * holeRadius) });
                 }
-
-                if (!ClipperLib.Clipper.Orientation(ringOuter)) ringOuter.reverse();
-                if (!ClipperLib.Clipper.Orientation(ringInner)) ringInner.reverse();
                 
                 const cl1 = new ClipperLib.Clipper();
                 const unionPaths = new ClipperLib.Paths();
-                cl1.AddPaths(basePaths, ClipperLib.PolyType.ptSubject, true);
+                cl1.AddPaths(offsetPaths, ClipperLib.PolyType.ptSubject, true);
                 cl1.AddPaths([ringOuter], ClipperLib.PolyType.ptSubject, true);
                 cl1.Execute(ClipperLib.ClipType.ctUnion, unionPaths, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
                 
@@ -633,53 +637,25 @@
                     for(let j = 0; j < holeNodes.length; j++) {
                         const hContour = getContour(holeNodes[j]);
                         if(hContour && hContour.length > 2) {
-                            
-                            // FILTRO DE BURACOS: Deleta todos os furos internos da imagem/texto, mantendo SÓ o furo da argola
-                            let hMinX = Infinity, hMaxX = -Infinity, hMinY = Infinity, hMaxY = -Infinity;
-                            hContour.forEach(p => {
-                                hMinX = Math.min(hMinX, p.X); hMaxX = Math.max(hMaxX, p.X);
-                                hMinY = Math.min(hMinY, p.Y); hMaxY = Math.max(hMaxY, p.Y);
-                            });
-                            const hCenterX = (hMinX + hMaxX) / 2;
-                            const hCenterY = (hMinY + hMaxY) / 2;
-                            
-                            const dist = Math.sqrt(Math.pow(hCenterX - cx, 2) + Math.pow(hCenterY - cy, 2));
-                            
-                            if (dist < ringRadiusRaw * 1.5) { // Somente o furo da argola passa pelo filtro!
-                                const holePath = new THREE.Path();
-                                holePath.moveTo(hContour[0].X / clipperScale, hContour[0].Y / clipperScale);
-                                for(let k = 1; k < hContour.length; k++) holePath.lineTo(hContour[k].X / clipperScale, hContour[k].Y / clipperScale);
-                                shape.holes.push(holePath);
-                            }
+                            const holePath = new THREE.Path();
+                            holePath.moveTo(hContour[0].X / clipperScale, hContour[0].Y / clipperScale);
+                            for(let k = 1; k < hContour.length; k++) holePath.lineTo(hContour[k].X / clipperScale, hContour[k].Y / clipperScale);
+                            shape.holes.push(holePath);
                         }
                     }
                     baseThreeShapes.push(shape);
                 }
                 
                 const currentBaseThickness = parseFloat(baseThicknessSlider.value) || 3.0;
-                const currentTextThickness = parseFloat(textThicknessSlider.value) || 1.5;
-
-                const baseDepthRaw = Math.max(0.2, currentBaseThickness - 0.7) * mmToRaw;
-                const textDepthRaw = currentTextThickness * mmToRaw;
-
-                const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, { 
-                    depth: baseDepthRaw, 
-                    bevelEnabled: true, 
-                    bevelThickness: 0.7 * mmToRaw, 
-                    bevelSize: 0.55 * mmToRaw, 
-                    bevelSegments: 4, 
-                    curveSegments: 8 
-                });
-                const textGeo = new THREE.ExtrudeGeometry(shapesToProcess, { 
-                    depth: textDepthRaw, 
-                    bevelEnabled: false, 
-                    curveSegments: 8 
-                });
+                const baseGeo = new THREE.ExtrudeGeometry(baseThreeShapes, { depth: Math.max(0.2, currentBaseThickness - 0.7), bevelEnabled: true, bevelThickness: 0.7, bevelSize: 0.55 * visualScale, bevelSegments: 4, curveSegments: 8 });
+                const textGeo = new THREE.ExtrudeGeometry(shapesToProcess, { depth: parseFloat(textThicknessSlider.value) || 1.5, bevelEnabled: false, curveSegments: 8 });
                 
-                const scaleFactor = targetLength / originalWidth;
-                baseGeo.scale(scaleFactor, scaleFactor, scaleFactor);
-                textGeo.scale(scaleFactor, scaleFactor, scaleFactor);
+                baseGeo.computeBoundingBox();
+                const originalWidth = baseGeo.boundingBox.max.x - baseGeo.boundingBox.min.x;
+                const scaleFactor = (parseFloat(lengthSlider.value) || 60) / originalWidth;
                 
+                baseGeo.scale(scaleFactor, scaleFactor, 1);
+                textGeo.scale(scaleFactor, scaleFactor, 1);
                 textGeo.translate(0, 0, currentBaseThickness);
                 
                 baseGeo.computeBoundingBox();
@@ -695,7 +671,7 @@
                 showLoading(false);
                 
             } catch(err) {
-                showError(err.message || "Erro na geração. Imagem muito complexa.");
+                showError(err.message || "Erro na geração. Ajuste as bordas.");
                 showLoading(false);
             }
         }
@@ -791,6 +767,7 @@
         
         nameInput.addEventListener('input', triggerGeneration);
         fontSelect.addEventListener('change', (e) => switchFont(e.target.value));
+        ringPositionSelect.addEventListener('change', triggerGeneration); // Evento da Argola
         lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; triggerGeneration(); });
         thicknessSlider.addEventListener('input', () => { thicknessValue.innerText = parseFloat(thicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
         baseThicknessSlider.addEventListener('input', () => { baseThicknessValue.innerText = parseFloat(baseThicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
