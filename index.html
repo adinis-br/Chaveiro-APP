@@ -176,7 +176,7 @@
             <div class="form-group" style="margin-bottom: 0;">
                 <label style="color: var(--primary-light); margin-bottom: 8px;">🔗 Argola</label>
                 <select id="ringPositionSelect">
-                    <option value="top">⬆️ Topo (Medalha)</option>
+                    <option value="top">⬆️ Topo</option>
                     <option value="left" selected>⬅️ Esquerda</option>
                     <option value="right">➡️ Direita</option>
                     <option value="bottom">⬇️ Fundo</option>
@@ -553,7 +553,7 @@
 
                 const pathsToOffset = mergedPaths.length > 0 ? mergedPaths : rawPaths;
                 
-                // --- AJUSTE MATEMÁTICO DE ESCALA PARA MANTER ARGOLA E BORDA PRECISAS ---
+                // --- AJUSTE MATEMÁTICO DE ESCALA ---
                 let rawMinX = Infinity, rawMaxX = -Infinity, rawMinY = Infinity, rawMaxY = -Infinity;
                 pathsToOffset.forEach(path => path.forEach(p => {
                     rawMinX = Math.min(rawMinX, p.X); rawMaxX = Math.max(rawMaxX, p.X);
@@ -574,31 +574,36 @@
                 
                 if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
                 
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                // --- LÓGICA DE EXTREMIDADES REAIS (CORREÇÃO DE FLUTUAÇÃO) ---
+                let extLeft = offsetPaths[0][0], extRight = offsetPaths[0][0];
+                let extTop = offsetPaths[0][0], extBottom = offsetPaths[0][0];
+                let minX = extLeft.X, maxX = extRight.X, minY = extBottom.Y, maxY = extTop.Y;
+
                 offsetPaths.forEach(path => path.forEach(p => { 
-                    minX = Math.min(minX, p.X); maxX = Math.max(maxX, p.X); 
-                    minY = Math.min(minY, p.Y); maxY = Math.max(maxY, p.Y); 
+                    if (p.X < minX) { minX = p.X; extLeft = p; }
+                    if (p.X > maxX) { maxX = p.X; extRight = p; }
+                    if (p.Y < minY) { minY = p.Y; extBottom = p; }
+                    if (p.Y > maxY) { maxY = p.Y; extTop = p; }
                 }));
                 
-                // --- LÓGICA DE POSICIONAMENTO DA ARGOLA ---
                 const ringPos = ringPositionSelect.value;
                 const ringRadius = 4.8 * visualScale * clipperScale;
                 const holeRadius = 2.6 * visualScale * clipperScale;
-                const overlap = 2.0 * visualScale * clipperScale;
+                const overlap = 2.5 * visualScale * clipperScale; // Aumentado para reforçar a mordida da argola
                 
                 let cx, cy;
                 if (ringPos === 'top') {
-                    cx = (minX + maxX) / 2;
+                    cx = extTop.X;
                     cy = maxY + ringRadius - overlap;
                 } else if (ringPos === 'right') {
                     cx = maxX + ringRadius - overlap;
-                    cy = (minY + maxY) / 2;
+                    cy = extRight.Y;
                 } else if (ringPos === 'bottom') {
-                    cx = (minX + maxX) / 2;
+                    cx = extBottom.X;
                     cy = minY - ringRadius + overlap;
-                } else { // 'left' por padrão
+                } else { // 'left'
                     cx = minX - ringRadius + overlap;
-                    cy = (minY + maxY) / 2;
+                    cy = extLeft.Y;
                 }
                 
                 const ringOuter = [], ringInner = [];
@@ -767,7 +772,7 @@
         
         nameInput.addEventListener('input', triggerGeneration);
         fontSelect.addEventListener('change', (e) => switchFont(e.target.value));
-        ringPositionSelect.addEventListener('change', triggerGeneration); // Evento da Argola
+        ringPositionSelect.addEventListener('change', triggerGeneration);
         lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; triggerGeneration(); });
         thicknessSlider.addEventListener('input', () => { thicknessValue.innerText = parseFloat(thicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
         baseThicknessSlider.addEventListener('input', () => { baseThicknessValue.innerText = parseFloat(baseThicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
