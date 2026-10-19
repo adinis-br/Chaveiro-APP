@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -235,14 +236,14 @@
             </div>
             <div class="form-group">
                 <label>🔄 Borda <span id="thicknessValue" class="value-display">1.5mm</span></label>
-                <input type="range" id="thicknessSlider" min="0.5" max="3.0" step="0.1" value="1.5">
+                <input type="range" id="thicknessSlider" min="0.5" max="6.0" step="0.1" value="1.5">
             </div>
         </div>
         
         <div class="form-row">
             <div class="form-group">
                 <label>📦 Base (Z) <span id="baseThicknessValue" class="value-display">3.0mm</span></label>
-                <input type="range" id="baseThicknessSlider" min="1.0" max="6.0" step="0.2" value="3.0">
+                <input type="range" id="baseThicknessSlider" min="1.0" max="8.0" step="0.2" value="3.0">
             </div>
             <div class="form-group">
                 <label>✨ Relevo <span id="textThicknessValue" class="value-display">1.5mm</span></label>
@@ -586,10 +587,9 @@
                 
                 if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
 
-                // --- LÓGICA DE BASE SÓLIDA (Remoção dos Furos) ---
+                // --- LÓGICA DE BASE SÓLIDA ---
                 const baseStyle = baseStyleSelect.value;
                 if (baseStyle === 'solid') {
-                    // Fundimos os caminhos gerados com uma árvore sem processar os buracos filhos
                     const clSolid = new ClipperLib.Clipper();
                     clSolid.AddPaths(offsetPaths, ClipperLib.PolyType.ptSubject, true);
                     const solidTree = new ClipperLib.PolyTree();
@@ -601,15 +601,12 @@
                     const solidOuterPaths = [];
                     const topNodesSolid = getChildsTemp(solidTree);
                     for(let i=0; i < topNodesSolid.length; i++) {
-                        // Coleta apenas os contornos primários externos, ignorando os furos internos (Childs)
                         solidOuterPaths.push(getContourTemp(topNodesSolid[i]));
                     }
                     
-                    // Substitui a malha vazada pela malha 100% preenchida
                     offsetPaths.length = 0;
                     offsetPaths.push(...solidOuterPaths);
                 }
-                // -------------------------------------------------
                 
                 let extLeft = offsetPaths[0][0], extRight = offsetPaths[0][0];
                 let extTop = offsetPaths[0][0], extBottom = offsetPaths[0][0];
@@ -637,7 +634,7 @@
                 } else if (ringPos === 'bottom') {
                     cx = extBottom.X;
                     cy = minY - ringRadius + overlap;
-                } else { // 'left'
+                } else { 
                     cx = minX - ringRadius + overlap;
                     cy = extLeft.Y;
                 }
@@ -809,7 +806,7 @@
         nameInput.addEventListener('input', triggerGeneration);
         fontSelect.addEventListener('change', (e) => switchFont(e.target.value));
         ringPositionSelect.addEventListener('change', triggerGeneration);
-        baseStyleSelect.addEventListener('change', triggerGeneration); // Evento do Estilo da Base
+        baseStyleSelect.addEventListener('change', triggerGeneration);
         lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; triggerGeneration(); });
         thicknessSlider.addEventListener('input', () => { thicknessValue.innerText = parseFloat(thicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
         baseThicknessSlider.addEventListener('input', () => { baseThicknessValue.innerText = parseFloat(baseThicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
