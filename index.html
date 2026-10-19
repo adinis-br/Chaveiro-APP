@@ -165,22 +165,33 @@
     
     <div class="controls-panel">
         
-        <div class="form-row" style="background: rgba(5, 150, 105, 0.1); padding: 10px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(5, 150, 105, 0.3);">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label style="color: var(--primary-light); margin-bottom: 8px;">🛠️ Modo Criação</label>
-                <select id="modeSelect">
-                    <option value="text">✍️ Texto</option>
-                    <option value="image">🖼️ Imagem</option>
-                </select>
+        <div style="background: rgba(5, 150, 105, 0.1); padding: 10px 10px 0px 10px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(5, 150, 105, 0.3);">
+            <div class="form-row" style="margin-bottom: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--primary-light); margin-bottom: 8px;">🛠️ Criação</label>
+                    <select id="modeSelect">
+                        <option value="text">✍️ Texto</option>
+                        <option value="image">🖼️ Imagem</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--primary-light); margin-bottom: 8px;">🔗 Argola</label>
+                    <select id="ringPositionSelect">
+                        <option value="top">⬆️ Topo</option>
+                        <option value="left" selected>⬅️ Esquerda</option>
+                        <option value="right">➡️ Direita</option>
+                        <option value="bottom">⬇️ Fundo</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
-                <label style="color: var(--primary-light); margin-bottom: 8px;">🔗 Argola</label>
-                <select id="ringPositionSelect">
-                    <option value="top">⬆️ Topo</option>
-                    <option value="left" selected>⬅️ Esquerda</option>
-                    <option value="right">➡️ Direita</option>
-                    <option value="bottom">⬇️ Fundo</option>
-                </select>
+            <div class="form-row" style="margin-bottom: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--primary-light); margin-bottom: 8px;">🔲 Estilo da Base</label>
+                    <select id="baseStyleSelect">
+                        <option value="holes" selected>Com Furos (Vazada)</option>
+                        <option value="solid">Sólida (Para Ímãs/NFC)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -287,6 +298,7 @@
 
         const modeSelect = document.getElementById('modeSelect');
         const ringPositionSelect = document.getElementById('ringPositionSelect');
+        const baseStyleSelect = document.getElementById('baseStyleSelect');
         const textGroup = document.getElementById('textGroup');
         const fontSelect = document.getElementById('fontSelect');
         const customFontInput = document.getElementById('customFontInput');
@@ -553,7 +565,7 @@
 
                 const pathsToOffset = mergedPaths.length > 0 ? mergedPaths : rawPaths;
                 
-                // --- AJUSTE MATEMÁTICO DE ESCALA ---
+                // Escala Matemática
                 let rawMinX = Infinity, rawMaxX = -Infinity, rawMinY = Infinity, rawMaxY = -Infinity;
                 pathsToOffset.forEach(path => path.forEach(p => {
                     rawMinX = Math.min(rawMinX, p.X); rawMaxX = Math.max(rawMaxX, p.X);
@@ -573,8 +585,32 @@
                 co.Execute(offsetPaths, offsetDist);
                 
                 if(!offsetPaths || offsetPaths.length === 0) throw new Error("Borda muito pequena ou imagem com falhas.");
+
+                // --- LÓGICA DE BASE SÓLIDA (Remoção dos Furos) ---
+                const baseStyle = baseStyleSelect.value;
+                if (baseStyle === 'solid') {
+                    // Fundimos os caminhos gerados com uma árvore sem processar os buracos filhos
+                    const clSolid = new ClipperLib.Clipper();
+                    clSolid.AddPaths(offsetPaths, ClipperLib.PolyType.ptSubject, true);
+                    const solidTree = new ClipperLib.PolyTree();
+                    clSolid.Execute(ClipperLib.ClipType.ctUnion, solidTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+
+                    const getChildsTemp = (node) => (typeof node.Childs === 'function') ? node.Childs() : (node.Childs || []);
+                    const getContourTemp = (node) => (typeof node.Contour === 'function') ? node.Contour() : (node.Contour || []);
+
+                    const solidOuterPaths = [];
+                    const topNodesSolid = getChildsTemp(solidTree);
+                    for(let i=0; i < topNodesSolid.length; i++) {
+                        // Coleta apenas os contornos primários externos, ignorando os furos internos (Childs)
+                        solidOuterPaths.push(getContourTemp(topNodesSolid[i]));
+                    }
+                    
+                    // Substitui a malha vazada pela malha 100% preenchida
+                    offsetPaths.length = 0;
+                    offsetPaths.push(...solidOuterPaths);
+                }
+                // -------------------------------------------------
                 
-                // --- LÓGICA DE EXTREMIDADES REAIS (CORREÇÃO DE FLUTUAÇÃO) ---
                 let extLeft = offsetPaths[0][0], extRight = offsetPaths[0][0];
                 let extTop = offsetPaths[0][0], extBottom = offsetPaths[0][0];
                 let minX = extLeft.X, maxX = extRight.X, minY = extBottom.Y, maxY = extTop.Y;
@@ -589,7 +625,7 @@
                 const ringPos = ringPositionSelect.value;
                 const ringRadius = 4.8 * visualScale * clipperScale;
                 const holeRadius = 2.6 * visualScale * clipperScale;
-                const overlap = 2.5 * visualScale * clipperScale; // Aumentado para reforçar a mordida da argola
+                const overlap = 2.5 * visualScale * clipperScale;
                 
                 let cx, cy;
                 if (ringPos === 'top') {
@@ -773,6 +809,7 @@
         nameInput.addEventListener('input', triggerGeneration);
         fontSelect.addEventListener('change', (e) => switchFont(e.target.value));
         ringPositionSelect.addEventListener('change', triggerGeneration);
+        baseStyleSelect.addEventListener('change', triggerGeneration); // Evento do Estilo da Base
         lengthSlider.addEventListener('input', () => { lengthValue.innerText = lengthSlider.value + 'mm'; triggerGeneration(); });
         thicknessSlider.addEventListener('input', () => { thicknessValue.innerText = parseFloat(thicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
         baseThicknessSlider.addEventListener('input', () => { baseThicknessValue.innerText = parseFloat(baseThicknessSlider.value).toFixed(1) + 'mm'; triggerGeneration(); });
