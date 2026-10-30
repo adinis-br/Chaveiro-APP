@@ -1,7 +1,7 @@
 {
   "name": "KeyForge 3D - Gerador de Chaveiros",
   "short_name": "KeyForge 3D",
-  "description": "Gerador de Chaveiros 3D personalizados em STL",
+  "description": "Gerador de Chaveiros 3D personalizados em 3MF (2 cores) e STL",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
